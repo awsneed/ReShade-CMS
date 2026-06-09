@@ -9,3 +9,11 @@ default, such as those in ITU BT.2408.
 
 Mostly I'm creating this for fun and for myself, and this is the first time I've
 worked with shaders or HLSL, so once again: Here be dragons.
+
+## To-do List
+
+- [ ] BT.2408-based tonemapping from higher range to lower range
+- [ ] SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)
+- [ ] Take another look or two at my initial macro-based typedef shenanigans
+- [ ] Try out some HLG stuff on the SDR -> HDR mapping. Might be a good fit for
+  overbright bits on HDR-forced SDR games.
