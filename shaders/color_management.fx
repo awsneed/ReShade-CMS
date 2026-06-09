@@ -1,4 +1,4 @@
-#include "color-management.fxh"
+#include "color_management.fxh"
 
 void vs_fullscreen(
     uint id : SV_VertexID,
