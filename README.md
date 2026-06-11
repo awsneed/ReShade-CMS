@@ -1,4 +1,4 @@
-# ReShade_Color_Grading
+# ReShade CMS
 
 Here be dragons
 
@@ -17,3 +17,4 @@ worked with shaders or HLSL, so once again: Here be dragons.
 - [ ] Take another look or two at my initial macro-based typedef shenanigans
 - [ ] Try out some HLG stuff on the SDR -> HDR mapping. Might be a good fit for
   overbright bits on HDR-forced SDR games.
+- [ ] Far in the future: Calibrating SDR output in HDR color spaces?
