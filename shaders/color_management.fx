@@ -106,4 +106,4 @@ technique SDRToHDR <
     }
 }
 
-// vim: filetype=glsl ts=4 sts=4 sw=4
+// vim: filetype=shaderslang ts=4 sts=4 sw=4
