@@ -1,17 +1,5 @@
+#include "ReShade.fxh"
 #include "color_management.fxh"
-
-void vs_fullscreen(
-    uint id : SV_VertexID,
-    out float4 position : SV_Position,
-    out float2 texcoord : TEXCOORD0)
-{
-    texcoord.x = (id == 2) ? 2.0 : 0.0;
-    texcoord.y = (id == 1) ? 2.0 : 0.0;
-    position = float4(texcoord * float2(2, -2) + float2(-1, 1), 0, 1);
-}
-
-texture2D backBufferTex : COLOR;
-sampler2D backBuffer { Texture = backBufferTex; };
 
 namespace SDRToHDR {
 uniform float gamma <
@@ -25,7 +13,7 @@ uniform float gamma <
 
 float4 ps(float4 pos : SV_Position) : SV_TARGET
 {
-    float4 color = tex2Dfetch(backBuffer, pos.xy);
+    float4 color = tex2Dfetch(ReShade::BackBuffer, pos.xy);
 
     // NOTE: Using scRGB output with Special K, 1.0 = 80 nits. So, where are we
     // in the process? Switching all the functions to output [0.0, 1.0]
@@ -113,7 +101,7 @@ technique SDRToHDR <
 {
     pass p0
     {
-        VertexShader = vs_fullscreen;
+        VertexShader = PostProcessVS;
         PixelShader = SDRToHDR::ps;
     }
 }
