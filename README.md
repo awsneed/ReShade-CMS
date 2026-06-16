@@ -12,9 +12,10 @@ worked with shaders or HLSL, so once again: Here be dragons.
 
 ## To-do List
 
-- [ ] BT.2408-based tonemapping from higher range to lower range
+- [ ] Fix tonemapping (not sure what I did wrong)
+- [ ] Add proper ICtCp color conversion in tonemapping (it will be the default)
 - [ ] SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)
+- [ ] Technique for applying the same gamma adjustment that would've applied to
+  a SDR -> HDR image, but on already-native HDR images. Should be pretty simple
+  I think.
 - [ ] Take another look or two at my initial macro-based typedef shenanigans
-- [ ] Try out some HLG stuff on the SDR -> HDR mapping. Might be a good fit for
-  overbright bits on HDR-forced SDR games.
-- [ ] Far in the future: Calibrating SDR output in HDR color spaces?

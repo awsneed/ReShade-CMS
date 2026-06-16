@@ -1,99 +1,108 @@
-#include "ReShade.fxh"
 #include "color_management.fxh"
 
 namespace SDRToHDR {
 uniform float gamma <
     ui_type = "slider";
-    ui_min = 0.001;
+    ui_min = 0.055;
     ui_step = 0.001;
-    ui_max = 2.400;
+    ui_max = 2.255;
     ui_label = "Gamma Adjustment";
     ui_category = "SDR -> HDR Settings";
 > = 1.155;
 
-float4 ps(float4 pos : SV_Position) : SV_TARGET
+float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-    float4 color = tex2Dfetch(ReShade::BackBuffer, pos.xy);
+    float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
-    // NOTE: Using scRGB output with Special K, 1.0 = 80 nits. So, where are we
-    // in the process? Switching all the functions to output [0.0, 1.0]
-    // normalized values is probably best for right now.
-
-    // Decode back to scene light
-    switch(Content::encoding)
+    // Display-referred mapping into PQ. Scene-referred is not compatible with
+    // overbright bits in scRGB
+    switch(Output::EOTF)
     {
-        case CONTENT_ENCODING_SRGB:
-        case CONTENT_ENCODING_BT1886:
-        case CONTENT_ENCODING_GAMMA22:
-            color.rgb = Rec709::inverseOETF(color.rgb);
+        case OUTPUT_EOTF_SRGB:
+            color = sRGB::EOTF(color);
             break;
-        case CONTENT_ENCODING_PQ:
-            color.rgb = PQ::inverseOETF(color.rgb);
+        case OUTPUT_EOTF_GAMMA22:
+            color = Gamma22::EOTF(color);
             break;
-        case CONTENT_ENCODING_HLG:
-            color.rgb = HLG::inverseOETF(color.rgb);
+        case OUTPUT_EOTF_BT1886:
+            color = BT1886::EOTF(color);
             break;
-        case CONTENT_ENCODING_LINEAR:
+        case OUTPUT_EOTF_LINEAR:
         default:
             break;
     }
 
-    // SDR to HDR adjustment perceptually match SDR when scaling up.
-    // See BT.2048 for details.
-    color.rgb = pow(color.rgb, SDRToHDR::gamma);
-
-    // Encode back to nonlinear
-    switch(Content::encoding)
-    {
-        case CONTENT_ENCODING_SRGB:
-        case CONTENT_ENCODING_BT1886:
-        case CONTENT_ENCODING_GAMMA22:
-            color.rgb = Rec709::OETF(color.rgb);
-            break;
-        case CONTENT_ENCODING_PQ:
-            color.rgb = PQ::OETF(color.rgb);
-            break;
-        case CONTENT_ENCODING_HLG:
-            color.rgb = HLG::OETF(color.rgb);
-            break;
-        case CONTENT_ENCODING_LINEAR:
-        default:
-            break;
+    switch (BUFFER_COLOR_SPACE) {
+    case COLOR_SPACE_SCRGB:
+        color /= PQ::peak / sRGB::peak;
+        color *= 
+            pow(Output::diffuse / sRGB::peak, 1.0 / SDRToHDR::gamma)
+            * pow(sRGB::peak / PQ::peak,
+                    (1.0 - SDRToHDR::gamma) / SDRToHDR::gamma);
+        break;
+    case COLOR_SPACE_PQ:
+    default:
+        color *= 
+            pow(Output::diffuse / BT1886::peak, 1.0 / SDRToHDR::gamma)
+            * pow(BT1886::peak / PQ::peak,
+                    (1.0 - SDRToHDR::gamma) / SDRToHDR::gamma);
+        break;
     }
 
-    // Encode to normalized display light
-    switch(Content::encoding)
-    {
-        case CONTENT_ENCODING_SRGB:
-            color.rgb = sRGB::EOTF(color.rgb);
-            break;
-        case CONTENT_ENCODING_BT1886:
-            color.rgb = BT1886::EOTF(color.rgb);
-            break;
-        case CONTENT_ENCODING_GAMMA22:
-            color.rgb = Gamma22::EOTF(color.rgb);
-            break;
-        case CONTENT_ENCODING_PQ:
-            color.rgb = PQ::EOTF(color.rgb);
-            break;
-        case CONTENT_ENCODING_HLG:
-            //color.rgb = HLG::EOTF(color.rgb);
-            break;
-        case CONTENT_ENCODING_LINEAR:
-        default:
-            break;
+    color = sign(color) * pow(abs(color), SDRToHDR::gamma);
+
+    switch (BUFFER_COLOR_SPACE) {
+    case COLOR_SPACE_SCRGB:
+        color *= PQ::peak / sRGB::peak;
+        break;
+    case COLOR_SPACE_PQ:
+    default:
+        break;
     }
-
-    // Scale to output diffuse white
-    color.rgb *= Output::diffuseWhite;
-
-    // Normalize output to scRGB's 1.0 = 80 nits.
-    color.rgb /= sRGB::white;
 
     return color;
 }
-} // namespace MapSDR
+} // namespace SDRToHDR
 
+namespace Tonemapping {
+
+float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
+{
+    float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+
+    switch (BUFFER_COLOR_SPACE) {
+    case COLOR_SPACE_SCRGB:
+        color /= PQ::peak / sRGB::peak;
+        break;
+    default:
+        break;
+    }
+
+    color = Tonemapping::RGB(color);
+
+    switch (BUFFER_COLOR_SPACE) {
+    case COLOR_SPACE_SCRGB:
+        color *= PQ::peak / sRGB::peak;
+        break;
+    default:
+        break;
+    }
+
+
+    return color;
+}
+} // namespace Tonemapping
+
+technique Tonemapping <
+    ui_label = "(EARLY WIP) Tonemapping";
+>
+{
+    pass p0
+    {
+        VertexShader = PostProcessVS;
+        PixelShader = Tonemapping::ps;
+    }
+}
 
 technique SDRToHDR <
     ui_label = "SDR -> HDR";
