@@ -1,4 +1,4 @@
-#include "colour_management.fxh"
+#include "reshade-cms.fxh"
 
 namespace SDRToHDR {
 uniform float gamma <
