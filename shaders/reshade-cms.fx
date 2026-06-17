@@ -99,7 +99,7 @@ float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 } // namespace Tonemapping
 
 technique Tonemapping <
-    ui_label = "(EARLY WIP) Tonemapping";
+    ui_label = "BT.2408 Static Tonemapping";
 >
 {
     pass p0
@@ -110,7 +110,7 @@ technique Tonemapping <
 }
 
 technique SDRToHDR <
-    ui_label = "SDR -> HDR";
+    ui_label = "BT.2408 SDR -> HDR";
 >
 {
     pass p0
