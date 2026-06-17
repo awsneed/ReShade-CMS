@@ -4,32 +4,32 @@
 
 // Autocreate function macro statements for overloading multi-component
 // versions. Commonly needed with transfer functions.
-#define _AUTO_FUNC(_FUNCTION, T1, T2) \
-_FUNCTION(T1,    T2   ); \
-_FUNCTION(T1##2, T2##2); \
+#define _AUTO_FUNC(_FUNCTION, T1, T2)                                          \
+_FUNCTION(T1,    T2   );                                                       \
+_FUNCTION(T1##2, T2##2);                                                       \
 _FUNCTION(T1##3, T2##3);
 
 // ReShade preprocessor translations
-#define  COLOR_SPACE_UNKNOWN  0
-#define  COLOR_SPACE_SRGB     1
-#define  COLOR_SPACE_SCRGB    2
-#define  COLOR_SPACE_PQ       3
-#define  COLOR_SPACE_HLG      4
+#define  COLOUR_SPACE_UNKNOWN  0
+#define  COLOUR_SPACE_SRGB     1
+#define  COLOUR_SPACE_SCRGB    2
+#define  COLOUR_SPACE_PQ       3
+#define  COLOUR_SPACE_HLG      4
 
-#if      BUFFER_COLOR_SPACE ==      COLOR_SPACE_UNKNOWN
-#define  BUFFER_COLOR_SPACE_STRING  "Unknown"
+#if      BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_UNKNOWN
+#define  BUFFER_COLOUR_SPACE_STRING  "Unknown"
 
-#elif    BUFFER_COLOR_SPACE ==      COLOR_SPACE_SRGB
-#define  BUFFER_COLOR_SPACE_STRING  "sRGB"
+#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_SRGB
+#define  BUFFER_COLOUR_SPACE_STRING  "sRGB"
 
-#elif    BUFFER_COLOR_SPACE ==      COLOR_SPACE_SCRGB
-#define  BUFFER_COLOR_SPACE_STRING  "scRGB"
+#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_SCRGB
+#define  BUFFER_COLOUR_SPACE_STRING  "scRGB"
 
-#elif    BUFFER_COLOR_SPACE ==      COLOR_SPACE_PQ
-#define  BUFFER_COLOR_SPACE_STRING  "PQ"
+#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_PQ
+#define  BUFFER_COLOUR_SPACE_STRING  "PQ"
 
-#elif    BUFFER_COLOR_SPACE ==      COLOR_SPACE_HLG
-#define  BUFFER_COLOR_SPACE_STRING  "HLG"
+#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_HLG
+#define  BUFFER_COLOUR_SPACE_STRING  "HLG"
 #endif
 
 // Macro types to help understand what is what at what time. Might redo this or
@@ -37,7 +37,7 @@ _FUNCTION(T1##3, T2##3);
 //
 // Generally normalized to [0:1] but sRGB / scRGB can go beyond. In that case,
 // 0.0 = 0.0 black, and 1.0 = 80 nits, with 2.0 = 160 nits and so on. The
-// negatives are for expanded gamut colors.
+// negatives are for expanded gamut colours.
 #define  Linear      float
 #define  Linear2     float2
 #define  Linear3     float3
@@ -48,12 +48,12 @@ _FUNCTION(T1##3, T2##3);
 #define  Nits2       float2
 #define  Nits3       float3
 
-#define _COLOR_POW(T1, T2) \
-T1 cpow(T2 value, float power) \
-{ \
-    return value > 0 ? pow(value, power) : -1.0 * pow(-1.0 * value, power); \
+#define _COLOUR_POW(T1, T2)                                                     \
+T1 cpow(T2 value, float power)                                                 \
+{                                                                              \
+    return sign(value) * pow(abs(value), power);                               \
 };
-_AUTO_FUNC(_COLOR_POW, float, float);
+_AUTO_FUNC(_COLOUR_POW, float, float);
 
 namespace Output {
 #define  OUTPUT_EOTF_SRGB     0
@@ -125,7 +125,7 @@ uniform uint OETF <
         "HLG\0";
     ui_label = "OETF";
     ui_category = "Input Settings";
-    ui_text = "Buffer Color Space = " BUFFER_COLOR_SPACE_STRING;
+    ui_text = "Buffer Colour Space = " BUFFER_COLOUR_SPACE_STRING;
 > = CONTENT_OETF_BT709;
 
 uniform Nits peak <
@@ -178,7 +178,7 @@ namespace BT601 {
     } // namespace PAL
 
     // NOTE / TODO: Seems to be the same OETF as BT.709? Double-check this,
-    // maybe the only difference is color primaries
+    // maybe the only difference is colour primaries
     // Low Priority as BT601 game content will probably be very rare
 } // namespace BT601
 
@@ -194,29 +194,29 @@ namespace BT709 {
     // See BT.1886 for an EOTF that can be used on modern displays for BT.709
     // content.
 
-    #define _BT709_OETF(T1, T2) \
-    T1 OETF(T2 L) \
-    { \
-        static const float breakPoint = 0.018; \
-        const T2 LSign = sign(L); \
-        L = abs(L); \
-        \
-        return LSign * (L < breakPoint \
-            ? 4.500 * L \
-            : 1.099 * pow(L, 0.45) - 0.099); \
+    #define _BT709_OETF(T1, T2)                                                \
+    T1 OETF(T2 L)                                                              \
+    {                                                                          \
+        static const float breakPoint = 0.018;                                 \
+        const T2 LSign = sign(L);                                              \
+        L = abs(L);                                                            \
+                                                                               \
+        return LSign * (L < breakPoint                                         \
+            ? 4.500 * L                                                        \
+            : 1.099 * pow(L, 0.45) - 0.099);                                   \
     };
     _AUTO_FUNC(_BT709_OETF, Nonlinear, Linear);
 
-    #define _BT709_INVERSE_OETF(T1, T2) \
-    T1 inverseOETF(T2 V) \
-    { \
-        static const float breakPoint = 0.081; \
-        const T2 VSign = sign(V); \
-        V = abs(V); \
-        \
-        return VSign * (V < breakPoint \
-            ? V / 4.5 \
-            : pow((V + 0.099) / 1.099, 1.0 / 0.45)); \
+    #define _BT709_INVERSE_OETF(T1, T2)                                        \
+    T1 inverseOETF(T2 V)                                                       \
+    {                                                                          \
+        static const float breakPoint = 0.081;                                 \
+        const T2 VSign = sign(V);                                              \
+        V = abs(V);                                                            \
+                                                                               \
+        return VSign * (V < breakPoint                                         \
+            ? V / 4.5                                                          \
+            : pow((V + 0.099) / 1.099, 1.0 / 0.45));                           \
     };
     _AUTO_FUNC(_BT709_INVERSE_OETF, Linear, Nonlinear);
 
@@ -248,32 +248,32 @@ namespace sRGB {
     static const float3x2 primaries = BT709::primaries;
     static const Nits peak = 80.0;
 
-    #define _SRGB_EOTF(T1, T2) \
-    T1 EOTF(T2 E) \
-    { \
-        static const float breakPoint = 0.04045; \
-        const T2 ESign = sign(E); \
-        E = abs(E); \
-        \
-        return ESign * (E > breakPoint \
-            ? pow((E + 0.055) / 1.055, 2.4) \
-            : E / 12.92); \
+    #define _SRGB_EOTF(T1, T2)                                                 \
+    T1 EOTF(T2 E)                                                              \
+    {                                                                          \
+        static const float breakPoint = 0.04045;                               \
+        const T2 ESign = sign(E);                                              \
+        E = abs(E);                                                            \
+                                                                               \
+        return ESign * (E > breakPoint                                         \
+            ? pow((E + 0.055) / 1.055, 2.4)                                    \
+            : E / 12.92);                                                      \
     };
     _AUTO_FUNC(_SRGB_EOTF, Linear, Nonlinear);
 
     // sRGB standard specifically uses an imprecise inverse EOTF breakPoint.
     // It's not exactly the true inverse of the EOTF.
     // NOTE: Not sure if the same negative reflection is to be used on inverses
-    #define _SRGB_INVERSE_EOTF(T1, T2) \
-    T1 inverseEOTF(T2 E) \
-    { \
-        static const float breakPoint = 0.0031308; \
-        const T2 ESign = sign(E); \
-        E = abs(E); \
-        \
-        return ESign * (E > breakPoint \
-            ? 1.055 * pow(E, 1.0 / 2.4) - 0.055 \
-            : 12.92 * E); \
+    #define _SRGB_INVERSE_EOTF(T1, T2)                                         \
+    T1 inverseEOTF(T2 E)                                                       \
+    {                                                                          \
+        static const float breakPoint = 0.0031308;                             \
+        const T2 ESign = sign(E);                                              \
+        E = abs(E);                                                            \
+                                                                               \
+        return ESign * (E > breakPoint                                         \
+            ? 1.055 * pow(E, 1.0 / 2.4) - 0.055                                \
+            : 12.92 * E);                                                      \
     };
     _AUTO_FUNC(_SRGB_INVERSE_EOTF, Nonlinear, Linear);
 
@@ -288,17 +288,17 @@ namespace scRGB {
     static const Nits diffuse = 80.0;
 } // namespace scRGB
 
-#define _POWER_LAW_GAMMA(T1, T2) \
-T1 powerLawGamma(T2 value, float power) \
-{ \
-    return pow(value, power); \
+#define _POWER_LAW_GAMMA(T1, T2)                                               \
+T1 powerLawGamma(T2 value, float power)                                        \
+{                                                                              \
+    return pow(value, power);                                                  \
 };
 _AUTO_FUNC(_POWER_LAW_GAMMA, Linear, Nonlinear);
 
-#define _INVERSE_POWER_LAW_GAMMA(T1, T2) \
-T1 inversePowerLawGamma(T2 value, float power) \
-{ \
-    return pow(value, 1.0 / power); \
+#define _INVERSE_POWER_LAW_GAMMA(T1, T2)                                       \
+T1 inversePowerLawGamma(T2 value, float power)                                 \
+{                                                                              \
+    return pow(value, 1.0 / power);                                            \
 };
 _AUTO_FUNC(_INVERSE_POWER_LAW_GAMMA, Nonlinear, Linear);
 
@@ -307,17 +307,17 @@ namespace Gamma22 {
     static const float3x2 primaries = BT709::primaries;
     static const Nits peak = 100.0;
 
-    #define _GAMMA22_EOTF(T1, T2) \
-    T1 EOTF(T2 value) \
-    { \
-        return sign(value) * powerLawGamma(abs(value), 2.2); \
+    #define _GAMMA22_EOTF(T1, T2)                                              \
+    T1 EOTF(T2 value)                                                          \
+    {                                                                          \
+        return sign(value) * powerLawGamma(abs(value), 2.2);                   \
     };
     _AUTO_FUNC(_GAMMA22_EOTF, Linear, Nonlinear);
 
-    #define _GAMMA22_INVERSE_EOTF(T1, T2) \
-    T1 inverseEOTF(T2 value) \
-    { \
-        return sign(value) * inversePowerLawGamma(abs(value), 2.2); \
+    #define _GAMMA22_INVERSE_EOTF(T1, T2)                                      \
+    T1 inverseEOTF(T2 value)                                                   \
+    {                                                                          \
+        return sign(value) * inversePowerLawGamma(abs(value), 2.2);            \
     };
     _AUTO_FUNC(_GAMMA22_INVERSE_EOTF, Nonlinear, Linear);
 
@@ -335,17 +335,17 @@ namespace BT1886 {
     static const Nits peak = 100.0;
     static const Nits black =  0.0;
 
-    #define _BT1886_EOTF(T1, T2) \
-    T1 EOTF(T2 value) \
-    { \
-        return sign(value) * powerLawGamma(abs(value), 2.4); \
+    #define _BT1886_EOTF(T1, T2)                                               \
+    T1 EOTF(T2 value)                                                          \
+    {                                                                          \
+        return sign(value) * powerLawGamma(abs(value), 2.4);                   \
     };
     _AUTO_FUNC(_BT1886_EOTF, Linear, Nonlinear);
 
-    #define _BT1886_INVERSE_EOTF(T1, T2) \
-    T1 inverseEOTF(T2 value) \
-    { \
-        return sign(value) * inversePowerLawGamma(abs(value), 2.4); \
+    #define _BT1886_INVERSE_EOTF(T1, T2)                                       \
+    T1 inverseEOTF(T2 value)                                                   \
+    {                                                                          \
+        return sign(value) * inversePowerLawGamma(abs(value), 2.4);            \
     };
     _AUTO_FUNC(_BT1886_INVERSE_EOTF, Nonlinear, Linear);
 
@@ -362,27 +362,27 @@ namespace BT2020 {
     );
     // Let's assume 12 bits, as 10 bits is the same as on BT.709; can just use
     // that.
-    static const float a = 1.0993; \
+    static const float a = 1.0993;
 
-    #define _BT2020_OETF(T1, T2) \
-    T1 OETF(T2 E) \
-    { \
-        static const float breakPoint = 0.0181; \
-        \
-        return E < breakPoint \
-            ? 4.5 * E \
-            : a * pow(E, 0.45) - (a - 1.0); \
+    #define _BT2020_OETF(T1, T2)                                               \
+    T1 OETF(T2 E)                                                              \
+    {                                                                          \
+        static const float breakPoint = 0.0181;                                \
+                                                                               \
+        return E < breakPoint                                                  \
+            ? 4.5 * E                                                          \
+            : a * pow(E, 0.45) - (a - 1.0);                                    \
     };
     _AUTO_FUNC(_BT2020_OETF, Nonlinear, Linear);
 
-    #define _BT2020_INVERSE_OETF(T1, T2) \
-    T1 inverseOETF(T2 E) \
-    { \
-        static const float breakPoint = 0.08145; \
-        \
-        return E < breakPoint \
-            ? E / 4.5 \
-            : pow((E + (a - 1)) / a, 1.0 / 0.45); \
+    #define _BT2020_INVERSE_OETF(T1, T2)                                       \
+    T1 inverseOETF(T2 E)                                                       \
+    {                                                                          \
+        static const float breakPoint = 0.08145;                               \
+                                                                               \
+        return E < breakPoint                                                  \
+            ? E / 4.5                                                          \
+            : pow((E + (a - 1)) / a, 1.0 / 0.45);                              \
     };
     _AUTO_FUNC(_BT2020_INVERSE_OETF, Linear, Nonlinear);
 
@@ -405,54 +405,54 @@ namespace PQ {
 
     // Input: Non-linear PQ encoded value
     // The EOTF maps the non-linear PQ signal into display light.
-    #define _PQ_EOTF(T1, T2) \
-    T1 EOTF(T2 E) \
-    { \
-        return pow( max(pow(E, 1.0 / m2) - c1, 0.0) \
-                    / (c2 - c3 * pow(E, 1.0 / m2)), 1.0 / m1); \
+    #define _PQ_EOTF(T1, T2)                                                   \
+    T1 EOTF(T2 E)                                                              \
+    {                                                                          \
+        return pow( max(pow(E, 1.0 / m2) - c1, 0.0)                            \
+                    / (c2 - c3 * pow(E, 1.0 / m2)), 1.0 / m1);                 \
     };
     _AUTO_FUNC(_PQ_EOTF, Linear, Nonlinear);
 
     // Input: Scene linear light
     // The OETF maps relative scene linear light into the non-linear PQ signal
     // value
-    #define _PQ_OETF(T1, T2) \
-    T1 OETF(T2 Y) \
-    { \
-        return pow((c1 + c2 * pow(Y, m1)) \
-                / (1.0 + c3 * pow(Y, m1)), m2); \
+    #define _PQ_OETF(T1, T2)                                                   \
+    T1 OETF(T2 Y)                                                              \
+    {                                                                          \
+        return pow((c1 + c2 * pow(Y, m1))                                      \
+                / (1.0 + c3 * pow(Y, m1)), m2);                                \
     };
     _AUTO_FUNC(_PQ_OETF, Nonlinear, Linear);
 
-    #define _PQ_INVERSE_EOTF(T1, T2) \
-    T1 inverseEOTF(T2 value) \
-    { \
-        return OETF(value); \
+    #define _PQ_INVERSE_EOTF(T1, T2)                                           \
+    T1 inverseEOTF(T2 value)                                                   \
+    {                                                                          \
+        return OETF(value);                                                    \
     };
     _AUTO_FUNC(_PQ_INVERSE_EOTF, Nonlinear, Linear);
 
-    #define _PQ_INVERSE_OETF(T1, T2) \
-    T1 inverseOETF(T2 value) \
-    { \
-        return EOTF(value); \
+    #define _PQ_INVERSE_OETF(T1, T2)                                           \
+    T1 inverseOETF(T2 value)                                                   \
+    {                                                                          \
+        return EOTF(value);                                                    \
     };
     _AUTO_FUNC(_PQ_INVERSE_OETF, Linear, Nonlinear);
 
     // Input: Scene linear light
     // The OOTF maps relative scene linear light to display linear light
     // TODO: Change to the HDR-scaled versions of these functions
-    #define _PQ_OOTF(T1, T2) \
-    T1 OOTF(T2 value) \
-    { \
-        return BT1886::EOTF(BT709::OETF(value)); \
+    #define _PQ_OOTF(T1, T2)                                                   \
+    T1 OOTF(T2 value)                                                          \
+    {                                                                          \
+        return BT1886::EOTF(BT709::OETF(value));                               \
     };
     _AUTO_FUNC(_PQ_OOTF, Linear, Linear);
 
     // TODO: Change to the HDR-scaled versions of these functions
-    #define _PQ_INVERSE_OOTF(T1, T2) \
-    T1 inverseOOTF(T2 value) \
-    { \
-        return BT709::inverseOETF(BT1886::inverseEOTF(value)); \
+    #define _PQ_INVERSE_OOTF(T1, T2)                                           \
+    T1 inverseOOTF(T2 value)                                                   \
+    {                                                                          \
+        return BT709::inverseOETF(BT1886::inverseEOTF(value));                 \
     };
     _AUTO_FUNC(_PQ_INVERSE_OOTF, Linear, Linear);
 
@@ -474,34 +474,33 @@ namespace HLG {
     // Input: Scene linear light
     // The OETF maps relative scene linear light into the non-linear signal
     // value.
-    #define _HLG_OETF(T1, T2) \
-    T1 OETF(T2 value) \
-    { \
-        static const float breakPoint = 1.0 / 12.0; \
-        return value > breakPoint ? \
-            a * log(12.0 * value - b) + c : \
-            sqrt(3.0 * value); \
+    #define _HLG_OETF(T1, T2)                                                  \
+    T1 OETF(T2 value)                                                          \
+    {                                                                          \
+        static const float breakPoint = 1.0 / 12.0;                            \
+        return value > breakPoint ?                                            \
+            a * log(12.0 * value - b) + c :                                    \
+            sqrt(3.0 * value);                                                 \
     };
     _AUTO_FUNC(_HLG_OETF, Nonlinear, Linear);
 
-    #define _HLG_INVERSE_OETF(T1, T2) \
-    T1 inverseOETF(T2 value) \
-    { \
-        static const float breakPoint = 1.0 / 2.0; \
-        return value > breakPoint ? \
-            (exp((value - c) / a) + b) / 12.0 : \
-            exp2(value) / 3.0; \
+    #define _HLG_INVERSE_OETF(T1, T2)                                          \
+    T1 inverseOETF(T2 value)                                                   \
+    {                                                                          \
+        static const float breakPoint = 1.0 / 2.0;                             \
+        return value > breakPoint ?                                            \
+            (exp((value - c) / a) + b) / 12.0 :                                \
+            exp2(value) / 3.0;                                                 \
     };
     _AUTO_FUNC(_HLG_INVERSE_OETF, Linear, Nonlinear);
 
     /* TODO: Finish this
     // Input: Scene linear light
     // The OOTF maps relative scene linear light to display linear light.
-    #define _HLG_OOTF(T1, T2) \
-    T1 OOTF(T2 value) \
-        return pow(?Ys?, gamma - 1) * value;
-    { \
-
+    #define _HLG_OOTF(T1, T2)                                                  \
+    T1 OOTF(T2 value)                                                          \
+        return pow(?Ys?, gamma - 1) * value;                                   \
+    {                                                                          \
     };
     _AUTO_FUNC(_HLG_OOTF, Linear, Linear);
 
@@ -509,21 +508,21 @@ namespace HLG {
     // The EOTF maps the non-linear HLG signal into display light.
     // NOTE: Assuming black level of 0 and peak of 1000, so no black level lift
     // TODO: Consider parameterizing it
-    #define _HLG_EOTF(T1, T2) \
-    T1 EOTF(T2 value) \
-    { \
-        // This max() would be where the black level lift comes in \
-        value = max(0.0, value); \
-        return OOTF(inverseOETF(value));
+    #define _HLG_EOTF(T1, T2)                                                  \
+    T1 EOTF(T2 value)                                                          \
+    {                                                                          \
+        // This max() would be where the black level lift comes in             \
+        value = max(0.0, value);                                               \
+        return OOTF(inverseOETF(value));                                       \
     };
     _AUTO_FUNC(_HLG_EOTF, Linear, Nonlinear);
 
-    #define _HLG_INVERSE_EOTF(T1, T2) \
-    T1 inverseEOTF(T2 value) \
-    { \
-        // max() and min() are uninvertible, so we won't \
-        // TODO: Check if black level ift should factor in here \
-        return OETF(inverseOOTF(value)); \
+    #define _HLG_INVERSE_EOTF(T1, T2)                                          \
+    T1 inverseEOTF(T2 value)                                                   \
+    {                                                                          \
+        // max() and min() are uninvertible, so we won't                       \
+        // TODO: Check if black level ift should factor in here                \
+        return OETF(inverseOOTF(value));                                       \
     };
     _AUTO_FUNC(_HLG_INVERSE_EOTF, Nonlinear, Linear);
     */
@@ -548,17 +547,17 @@ namespace ICtCp {
             17933.0, -17390.0, -543.0
         );
 
-        float3 derive(Nits3 color)
+        float3 derive(Nits3 colour)
         {
-            float3 LMSColor = PQ::inverseEOTF(float3(
-                dot(LMSCoefficients[0], color),
-                dot(LMSCoefficients[1], color),
-                dot(LMSCoefficients[2], color)
+            float3 LMSColour = PQ::inverseEOTF(float3(
+                dot(LMSCoefficients[0], colour),
+                dot(LMSCoefficients[1], colour),
+                dot(LMSCoefficients[2], colour)
             ) / 4096.0) / PQ::peak;
 
-            return float3(deriveI(LMSColor.xy), float2(
-                dot(CtCpCoefficients[0], LMSColor),
-                dot(CtCpCoefficients[1], LMSColor)) / 4096.0);
+            return float3(deriveI(LMSColour.xy), float2(
+                dot(CtCpCoefficients[0], LMSColour),
+                dot(CtCpCoefficients[1], LMSColour)) / 4096.0);
         };
     } // namespace ICtCp::PQ
 
@@ -568,17 +567,17 @@ namespace ICtCp {
             9500.0, -9212.0, -288.0
         );
 
-        float3 derive(Nits3 color)
+        float3 derive(Nits3 colour)
         {
-            float3 LMSColor = HLG::OETF(float3(
-                dot(LMSCoefficients[0], color),
-                dot(LMSCoefficients[1], color),
-                dot(LMSCoefficients[2], color)
+            float3 LMSColour = HLG::OETF(float3(
+                dot(LMSCoefficients[0], colour),
+                dot(LMSCoefficients[1], colour),
+                dot(LMSCoefficients[2], colour)
             ) / 4096.0) / HLG::peak;
 
-            return float3(deriveI(LMSColor.xy), float2(
-                dot(CtCpCoefficients[0], LMSColor),
-                dot(CtCpCoefficients[1], LMSColor)) / 4096.0);
+            return float3(deriveI(LMSColour.xy), float2(
+                dot(CtCpCoefficients[0], LMSColour),
+                dot(CtCpCoefficients[1], LMSColour)) / 4096.0);
         };
     } // namespace ICtCp::HLG
 } // namespace ICtCp
@@ -587,59 +586,51 @@ namespace XYZ {
 } // namespace XYZ
 
 namespace Tonemapping {
-    #define _BT2408_T(T1, T2) \
-    T1 T(T2 A, float KS) \
-    { \
-        return (A - KS) / (1.0 - KS); \
+    #define _BT2408_T(T1, T2)                                                  \
+    T1 T(T2 A, float KS)                                                       \
+    {                                                                          \
+        return (A - KS) / (1.0 - KS);                                          \
     };
     _AUTO_FUNC(_BT2408_T, float, float);
 
-    #define _BT2408_P(T1, T2) \
-    T1 P(T2 B, float KS, float maxLum) \
-    { \
-        return ( 2.0 * pow(T(B, KS),3.0) - 3.0 * pow(T(B, KS),2.0) + 1.0     ) \
-             * KS \
-             + (       pow(T(B, KS),3.0) - 2.0 * pow(T(B, KS),2.0) + T(B, KS)) \
-             * (1.0 - KS) \
-             + (-2.0 * pow(T(B, KS),3.0) + 3.0 * pow(T(B, KS),2.0)           ) \
-             * maxLum; \
+    #define _BT2408_P(T1, T2)                                                  \
+    T1 P(T2 B, float KS, float maxLum)                                         \
+    {                                                                          \
+        T2 TOfB        = T(B, KS);                                             \
+        T2 TOfBSquared = pow(TOfB, 2.0);                                       \
+        T2 TOfBCubed   = pow(TOfB, 3.0);                                       \
+                                                                               \
+        /* Hermite spline */                                                   \
+        return ( 2.0 * TOfBCubed - 3.0 * TOfBSquared + 1.0 ) * KS              \
+             + (       TOfBCubed - 2.0 * TOfBSquared + TOfB) * (1.0 - KS)      \
+             + (-2.0 * TOfBCubed + 3.0 * TOfBSquared       ) * maxLum;         \
     };
     _AUTO_FUNC(_BT2408_P, float, float);
 
-    #define _BT2408_EETF(T1, T2) \
-    T1 EETF(T2 e1) \
-    { \
-        float minLum = \
-            ((Output::black / PQ::peak) \
-            - (Input::black / PQ::peak) \
-            ) / ( \
-            (Input::peak / PQ::peak) \
-            - (Input::black / PQ::peak)); \
-        minLum = 0.0; \
-        \
-        float maxLum =  \
-            ((max(Output::peak, Output::diffuse) / PQ::peak) \
-            - (Input::black / PQ::peak) \
-            ) / ( \
-            (Input::peak / PQ::peak) \
-            - (Input::black / PQ::peak)); \
-        \
-        float KS = 1.5 * maxLum - 0.5; \
-        \
-        e1 = (e1 - (Input::black / PQ::peak) \
-                ) / ( \
-                (Input::peak / PQ::peak) \
-                - (Input::black / PQ::peak)); \
-        e1 = saturate(e1); \
-        \
-        T2 e2 = e1; \
-        e2 = e1 < KS ? e1 : e2; \
-        e2 = e1 >= KS ? P(e1, KS, maxLum) : e2; \
-        \
-        return (e2 + minLum * pow(1.0 - e2, 4.0)) \
-            * ((Input::peak / PQ::peak) \
-            - (Input::black / PQ::peak)) \
-            + (Input::black / PQ::peak); \
+    #define _BT2408_EETF(T1, T2)                                               \
+    T1 EETF(T2 e1)                                                             \
+    {                                                                          \
+        float outputBlack     = min(Output::black, Output::diffuse);           \
+        float outputPeak      = max(Output::peak, Output::diffuse);            \
+        float outputBlackNorm = PQ::inverseEOTF(outputBlack  / PQ::peak);      \
+        float outputPeakNorm  = PQ::inverseEOTF(outputPeak   / PQ::peak);      \
+        float inputBlackNorm  = PQ::inverseEOTF(Input::black / PQ::peak);      \
+        float inputPeakNorm   = PQ::inverseEOTF(Input::peak  / PQ::peak);      \
+        float inputRangeNorm  = inputPeakNorm - inputBlackNorm;                \
+                                                                               \
+        e1 = (e1 - inputBlackNorm) / (inputPeakNorm - inputBlackNorm);         \
+        /* Let's clamp the input to our configured input peak */               \
+        e1 = saturate(e1);                                                     \
+                                                                               \
+        float minLum = (outputBlackNorm - inputBlackNorm) / inputRangeNorm;    \
+        float maxLum = (outputPeakNorm - inputBlackNorm)  / inputRangeNorm;    \
+        float KS = 1.5 * maxLum - 0.5;                                         \
+                                                                               \
+        /* Step 3 */                                                           \
+        T2 e2 = e1 < KS ? e1 : P(e1, KS, maxLum);                              \
+        T2 e3 = e2 + minLum * pow(1.0 - e2, 4.0);                              \
+                                                                               \
+        return e3 * inputRangeNorm + inputBlackNorm;                           \
     };
     _AUTO_FUNC(_BT2408_EETF, Nonlinear, Nonlinear);
 
@@ -657,9 +648,9 @@ namespace Tonemapping {
         return float3(Y2, min(YCbCr.x / Y2, Y2 / YCbCr.x) * YCbCr.yz);
     };
 
-    float3 RGB(float3 color)
+    float3 RGB(float3 colour)
     {
-        return EETF(color);
+        return EETF(colour);
     };
 
 } // namespace Tonemapping
