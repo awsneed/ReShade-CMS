@@ -16,20 +16,20 @@ _FUNCTION(T1##3, T2##3);
 #define  COLOUR_SPACE_PQ       3
 #define  COLOUR_SPACE_HLG      4
 
-#if      BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_UNKNOWN
-#define  BUFFER_COLOUR_SPACE_STRING  "Unknown"
+#if      BUFFER_COLOR_SPACE ==      COLOUR_SPACE_UNKNOWN
+#define  BUFFER_COLOR_SPACE_STRING  "Unknown"
 
-#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_SRGB
-#define  BUFFER_COLOUR_SPACE_STRING  "sRGB"
+#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_SRGB
+#define  BUFFER_COLOR_SPACE_STRING  "sRGB"
 
-#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_SCRGB
-#define  BUFFER_COLOUR_SPACE_STRING  "scRGB"
+#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_SCRGB
+#define  BUFFER_COLOR_SPACE_STRING  "scRGB"
 
-#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_PQ
-#define  BUFFER_COLOUR_SPACE_STRING  "PQ"
+#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_PQ
+#define  BUFFER_COLOR_SPACE_STRING  "PQ"
 
-#elif    BUFFER_COLOUR_SPACE ==      COLOUR_SPACE_HLG
-#define  BUFFER_COLOUR_SPACE_STRING  "HLG"
+#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_HLG
+#define  BUFFER_COLOR_SPACE_STRING  "HLG"
 #endif
 
 // Macro types to help understand what is what at what time. Might redo this or
@@ -125,7 +125,7 @@ uniform uint OETF <
         "HLG\0";
     ui_label = "OETF";
     ui_category = "Input Settings";
-    ui_text = "Buffer Colour Space = " BUFFER_COLOUR_SPACE_STRING;
+    ui_text = "Buffer Colour Space = " BUFFER_COLOR_SPACE_STRING;
 > = CONTENT_OETF_BT709;
 
 uniform Nits peak <

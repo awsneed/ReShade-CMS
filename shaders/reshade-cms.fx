@@ -32,7 +32,7 @@ float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
             break;
     }
 
-    switch (BUFFER_COLOUR_SPACE) {
+    switch (BUFFER_COLOR_SPACE) {
     case COLOUR_SPACE_SCRGB:
         colour /= PQ::peak / sRGB::peak;
         colour *= 
@@ -51,7 +51,7 @@ float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 
     colour = sign(colour) * pow(abs(colour), SDRToHDR::gamma);
 
-    switch (BUFFER_COLOUR_SPACE) {
+    switch (BUFFER_COLOR_SPACE) {
     case COLOUR_SPACE_SCRGB:
         colour = min(colour,  1.0);
         colour = max(colour, -1.0);
@@ -74,7 +74,7 @@ float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
     float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
-    switch (BUFFER_COLOUR_SPACE) {
+    switch (BUFFER_COLOR_SPACE) {
     case COLOUR_SPACE_SCRGB:
         colour /= PQ::peak / sRGB::peak;
         break;
@@ -85,7 +85,7 @@ float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
     // TODO: Add BT.709 -> BT.2020 conversion before this, since it works in PQ
     colour = PQ::EOTF(Tonemapping::RGB(PQ::inverseEOTF(colour)));
 
-    switch (BUFFER_COLOUR_SPACE) {
+    switch (BUFFER_COLOR_SPACE) {
     case COLOUR_SPACE_SCRGB:
         colour *= PQ::peak / sRGB::peak;
         break;
