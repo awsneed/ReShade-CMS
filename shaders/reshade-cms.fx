@@ -1,4 +1,4 @@
-#include "color_management.fxh"
+#include "colour_management.fxh"
 
 namespace SDRToHDR {
 uniform float gamma <
@@ -12,55 +12,59 @@ uniform float gamma <
 
 float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-    float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
     // Display-referred mapping into PQ. Scene-referred is not compatible with
     // overbright bits in scRGB
     switch(Output::EOTF)
     {
         case OUTPUT_EOTF_SRGB:
-            color = sRGB::EOTF(color);
+            colour = sRGB::EOTF(colour);
             break;
         case OUTPUT_EOTF_GAMMA22:
-            color = Gamma22::EOTF(color);
+            colour = Gamma22::EOTF(colour);
             break;
         case OUTPUT_EOTF_BT1886:
-            color = BT1886::EOTF(color);
+            colour = BT1886::EOTF(colour);
             break;
         case OUTPUT_EOTF_LINEAR:
         default:
             break;
     }
 
-    switch (BUFFER_COLOR_SPACE) {
-    case COLOR_SPACE_SCRGB:
-        color /= PQ::peak / sRGB::peak;
-        color *= 
+    switch (BUFFER_COLOUR_SPACE) {
+    case COLOUR_SPACE_SCRGB:
+        colour /= PQ::peak / sRGB::peak;
+        colour *= 
             pow(Output::diffuse / sRGB::peak, 1.0 / SDRToHDR::gamma)
             * pow(sRGB::peak / PQ::peak,
                     (1.0 - SDRToHDR::gamma) / SDRToHDR::gamma);
         break;
-    case COLOR_SPACE_PQ:
+    case COLOUR_SPACE_PQ:
     default:
-        color *= 
+        colour *= 
             pow(Output::diffuse / BT1886::peak, 1.0 / SDRToHDR::gamma)
             * pow(BT1886::peak / PQ::peak,
                     (1.0 - SDRToHDR::gamma) / SDRToHDR::gamma);
         break;
     }
 
-    color = sign(color) * pow(abs(color), SDRToHDR::gamma);
+    colour = sign(colour) * pow(abs(colour), SDRToHDR::gamma);
 
-    switch (BUFFER_COLOR_SPACE) {
-    case COLOR_SPACE_SCRGB:
-        color *= PQ::peak / sRGB::peak;
+    switch (BUFFER_COLOUR_SPACE) {
+    case COLOUR_SPACE_SCRGB:
+        colour = min(colour,  1.0);
+        colour = max(colour, -1.0);
+        colour *= PQ::peak / sRGB::peak;
         break;
-    case COLOR_SPACE_PQ:
+    case COLOUR_SPACE_PQ:
+        break;
     default:
         break;
     }
 
-    return color;
+
+    return colour;
 }
 } // namespace SDRToHDR
 
@@ -68,28 +72,29 @@ namespace Tonemapping {
 
 float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-    float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
-    switch (BUFFER_COLOR_SPACE) {
-    case COLOR_SPACE_SCRGB:
-        color /= PQ::peak / sRGB::peak;
+    switch (BUFFER_COLOUR_SPACE) {
+    case COLOUR_SPACE_SCRGB:
+        colour /= PQ::peak / sRGB::peak;
         break;
     default:
         break;
     }
 
-    color = Tonemapping::RGB(color);
+    // TODO: Add BT.709 -> BT.2020 conversion before this, since it works in PQ
+    colour = PQ::EOTF(Tonemapping::RGB(PQ::inverseEOTF(colour)));
 
-    switch (BUFFER_COLOR_SPACE) {
-    case COLOR_SPACE_SCRGB:
-        color *= PQ::peak / sRGB::peak;
+    switch (BUFFER_COLOUR_SPACE) {
+    case COLOUR_SPACE_SCRGB:
+        colour *= PQ::peak / sRGB::peak;
         break;
     default:
         break;
     }
 
 
-    return color;
+    return colour;
 }
 } // namespace Tonemapping
 
