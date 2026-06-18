@@ -610,6 +610,13 @@ namespace Tonemapping {
     #define _BT2408_EETF(T1, T2)                                               \
     T1 EETF(T2 e1)                                                             \
     {                                                                          \
+        /* Skip if we don't need to tonemap. Why did you turn this on? */      \
+        if (Output::black <= Input::black && Output::peak >= Input::peak)      \
+        {                                                                      \
+            return e1;                                                         \
+        };                                                                     \
+                                                                               \
+        /* Bunch of simplification setup */                                    \
         float outputBlack     = min(Output::black, Output::diffuse);           \
         float outputPeak      = max(Output::peak, Output::diffuse);            \
         float outputBlackNorm = PQ::inverseEOTF(outputBlack  / PQ::peak);      \
