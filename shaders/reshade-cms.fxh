@@ -216,7 +216,7 @@ namespace BT709 {
                                                                                \
         return VSign * (V < breakPoint                                         \
             ? V / 4.5                                                          \
-            : pow((V + 0.099) / 1.099, 1.0 / 0.45));                           \
+            : pow((V + 0.099) / 1.099, rcp(0.45)));                           \
     };
     _AUTO_FUNC(_BT709_INVERSE_OETF, Linear, Nonlinear);
 
@@ -272,7 +272,7 @@ namespace sRGB {
         E = abs(E);                                                            \
                                                                                \
         return ESign * (E > breakPoint                                         \
-            ? 1.055 * pow(E, 1.0 / 2.4) - 0.055                                \
+            ? 1.055 * pow(E, rcp(2.4)) - 0.055                                \
             : 12.92 * E);                                                      \
     };
     _AUTO_FUNC(_SRGB_INVERSE_EOTF, Nonlinear, Linear);
@@ -298,7 +298,7 @@ _AUTO_FUNC(_POWER_LAW_GAMMA, Linear, Nonlinear);
 #define _INVERSE_POWER_LAW_GAMMA(T1, T2)                                       \
 T1 inversePowerLawGamma(T2 value, float power)                                 \
 {                                                                              \
-    return pow(value, 1.0 / power);                                            \
+    return pow(value, rcp(power));                                            \
 };
 _AUTO_FUNC(_INVERSE_POWER_LAW_GAMMA, Nonlinear, Linear);
 
@@ -382,7 +382,7 @@ namespace BT2020 {
                                                                                \
         return E < breakPoint                                                  \
             ? E / 4.5                                                          \
-            : pow((E + (a - 1)) / a, 1.0 / 0.45);                              \
+            : pow((E + (a - 1)) / a, rcp(0.45));                              \
     };
     _AUTO_FUNC(_BT2020_INVERSE_OETF, Linear, Nonlinear);
 
@@ -408,8 +408,8 @@ namespace PQ {
     #define _PQ_EOTF(T1, T2)                                                   \
     T1 EOTF(T2 E)                                                              \
     {                                                                          \
-        return pow( max(pow(E, 1.0 / m2) - c1, 0.0)                            \
-                    / (c2 - c3 * pow(E, 1.0 / m2)), 1.0 / m1);                 \
+        return pow( max(pow(E, rcp(m2)) - c1, 0.0)                            \
+                    / (c2 - c3 * pow(E, rcp(m2))), rcp(m1));                 \
     };
     _AUTO_FUNC(_PQ_EOTF, Linear, Nonlinear);
 
@@ -477,7 +477,7 @@ namespace HLG {
     #define _HLG_OETF(T1, T2)                                                  \
     T1 OETF(T2 value)                                                          \
     {                                                                          \
-        static const float breakPoint = 1.0 / 12.0;                            \
+        static const float breakPoint = rcp(12.0);                            \
         return value > breakPoint ?                                            \
             a * log(12.0 * value - b) + c :                                    \
             sqrt(3.0 * value);                                                 \
@@ -487,7 +487,7 @@ namespace HLG {
     #define _HLG_INVERSE_OETF(T1, T2)                                          \
     T1 inverseOETF(T2 value)                                                   \
     {                                                                          \
-        static const float breakPoint = 1.0 / 2.0;                             \
+        static const float breakPoint = rcp(2.0);                             \
         return value > breakPoint ?                                            \
             (exp((value - c) / a) + b) / 12.0 :                                \
             exp2(value) / 3.0;                                                 \

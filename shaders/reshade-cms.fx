@@ -36,14 +36,14 @@ float3 ps(float4 pos : SV_Position, float2 texcoord : TexCoord) : SV_Target
     case COLOUR_SPACE_SCRGB:
         colour /= PQ::peak / sRGB::peak;
         colour *= 
-            pow(Output::diffuse / sRGB::peak, 1.0 / SDRToHDR::gamma)
+            pow(Output::diffuse / sRGB::peak, rcp(SDRToHDR::gamma))
             * pow(sRGB::peak / PQ::peak,
                     (1.0 - SDRToHDR::gamma) / SDRToHDR::gamma);
         break;
     case COLOUR_SPACE_PQ:
     default:
         colour *= 
-            pow(Output::diffuse / BT1886::peak, 1.0 / SDRToHDR::gamma)
+            pow(Output::diffuse / BT1886::peak, rcp(SDRToHDR::gamma))
             * pow(BT1886::peak / PQ::peak,
                     (1.0 - SDRToHDR::gamma) / SDRToHDR::gamma);
         break;
