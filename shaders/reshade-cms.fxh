@@ -625,18 +625,25 @@ namespace Tonemapping {
         float inputPeakNorm   = PQ::inverseEOTF(Input::peak  / PQ::peak);      \
         float inputRangeNorm  = inputPeakNorm - inputBlackNorm;                \
                                                                                \
+        /* Step 1: Normalize PQ values based on mastering display */           \
         e1 = (e1 - inputBlackNorm) / (inputPeakNorm - inputBlackNorm);         \
         /* Let's clamp the input to our configured input peak */               \
         e1 = saturate(e1);                                                     \
                                                                                \
+        /* Step 1.5: Calculate mastering display black and white in [0:1] PQ */\
         float minLum = (outputBlackNorm - inputBlackNorm) / inputRangeNorm;    \
         float maxLum = (outputPeakNorm - inputBlackNorm)  / inputRangeNorm;    \
+                                                                               \
+        /* Step 2: Calculate 1:1 mapping and knee (?) */                       \
         float KS = 1.5 * maxLum - 0.5;                                         \
                                                                                \
-        /* Step 3 */                                                           \
+        /* Step 3: Saolve for EETF (e3) with given end points */               \
         T2 e2 = e1 < KS ? e1 : P(e1, KS, maxLum);                              \
         T2 e3 = e2 + minLum * pow(1.0 - e2, 4.0);                              \
                                                                                \
+        /* Step 4: Hermite spline equations (see functions P(...) and T(...) */\
+                                                                               \
+        /* Step 5: Invert normalization of PQ values */                        \
         return e3 * inputRangeNorm + inputBlackNorm;                           \
     };
     _AUTO_FUNC(_BT2408_EETF, Nonlinear, Nonlinear);
