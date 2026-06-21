@@ -22,6 +22,7 @@ worked with shaders or HLSL, so once again: Here be dragons.
 - [ ] Add more tonemapping methods and a selector for them
 - [ ] Re-organize code / Take another look or two at my initial macro-based
   typedef shenanigans
+- [ ] Improve performance
 
 ## Special Thanks
 
