@@ -713,6 +713,7 @@ namespace Content {
     T1 toLinear(T2 colour) {                                                   \
         /* TODO: Account for pre-existing EOTF */                              \
         switch (overrideEOTF) {                                                \
+        case EOTF_NONE:                                                        \
         case EOTF_SRGB:                                                        \
             colour = sRGB::EOTF(colour);                                       \
             break;                                                             \
@@ -729,7 +730,6 @@ namespace Content {
             /* TODO */                                                         \
             /*colour = HLG::EOTF(colour); */                                   \
             /*break; */                                                        \
-        case EOTF_NONE:                                                        \
         default:                                                               \
             break;                                                             \
         }                                                                      \
@@ -742,6 +742,7 @@ namespace Content {
     T1 toNonlinear(T2 colour) {                                                \
         /* TODO: Account for pre-existing EOTF */                              \
         switch (overrideEOTF) {                                                \
+        case EOTF_NONE:                                                        \
         case EOTF_SRGB:                                                        \
             colour = sRGB::iEOTF(colour);                                      \
             break;                                                             \
@@ -758,7 +759,6 @@ namespace Content {
             /* TODO */                                                         \
             /*colour = HLG::iEOTF(colour); */                                  \
             /*break; */                                                        \
-        case EOTF_NONE:                                                        \
         default:                                                               \
             break;                                                             \
         }                                                                      \
