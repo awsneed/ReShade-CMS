@@ -12,16 +12,18 @@ worked with shaders or HLSL, so once again: Here be dragons.
 
 ## To-do List
 
-- [x] Fix tonemapping (not sure what I did wrong)
-- [x] Add proper ICtCp color conversion in tonemapping (it will be the default)
-- [ ] Add more tonemapping methods and a selector for them
-- [ ] SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)
+- [x] ~~Fix tonemapping (not sure what I did wrong)~~
+- [x] ~~Add proper ICtCp color conversion in tonemapping (it will be the
+  default)~~
 - [ ] Technique for applying the same gamma adjustment that would've applied to
   a SDR -> HDR image, but on already-native HDR images. Should be pretty simple
   I think.
-- [ ] Take another look or two at my initial macro-based typedef shenanigans
+- [ ] SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)
+- [ ] Add more tonemapping methods and a selector for them
+- [ ] Re-organize code / Take another look or two at my initial macro-based
+  typedef shenanigans
 
-## Special Thanks To:
+## Special Thanks
 
 [Lillium](https://github.com/EndlesslyFlowering) for their [ReShade HDR
 Shaders](https://github.com/EndlesslyFlowering/ReShade_HDR_shaders) project,
