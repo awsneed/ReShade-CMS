@@ -1,6 +1,7 @@
 #include "reshade-cms.fxh"
 
-namespace SDRInHDR {
+namespace SDRInHDR
+{
     uniform float gamma <
         ui_type = "slider";
         ui_min = 1.000;
@@ -13,10 +14,12 @@ namespace SDRInHDR {
     float3 ps(
         float4 pos : SV_POSITION,
         float2 texcoord : TexCoord
-    ) : SV_Target {
+    ) : SV_Target
+    {
         float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
-        if (Content::overrideEOTF == EOTF_NONE) {
+        if (Content::overrideEOTF == EOTF_NONE)
+        {
             // TODO: Make this smarter. For now, assume sRGB
             colour = sRGB::iEOTF(colour);
         };
@@ -30,7 +33,8 @@ namespace SDRInHDR {
 
         colour = Content::toLinear(BT2020::toBT709(Content::toNonlinear(colour)));
 
-        switch (BUFFER_COLOR_SPACE) {
+        switch (BUFFER_COLOR_SPACE)
+        {
         case COLOUR_SPACE_PQ:
             break;
         case COLOUR_SPACE_SCRGB:
@@ -43,14 +47,17 @@ namespace SDRInHDR {
     }
 } // namespace SDRInHDR
 
-namespace Tonemapping {
+namespace Tonemapping
+{
     float3 ps(
         float4 pos : SV_POSITION,
         float2 texcoord : TexCoord
-    ) : SV_Target {
+    ) : SV_Target
+    {
         float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
-        switch (BUFFER_COLOR_SPACE) {
+        switch (BUFFER_COLOR_SPACE)
+        {
         case COLOUR_SPACE_SCRGB:
             colour = Content::toLinear(
                 BT709::toBT2020(Content::toNonlinear(colour)));
@@ -67,7 +74,8 @@ namespace Tonemapping {
             )
         );
 
-        switch (BUFFER_COLOR_SPACE) {
+        switch (BUFFER_COLOR_SPACE)
+        {
         case COLOUR_SPACE_SCRGB:
             colour *= PQ::peakWhite / sRGB::whiteLevel;
             colour = Content::toLinear(
@@ -84,7 +92,8 @@ namespace Tonemapping {
 float3 TestPS(
     float4 pos : SV_POSITION,
     float2 texcoord : TexCoord
-) : SV_Target {
+) : SV_Target
+{
     float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
     //return BT2020::toBT709(PQ::iEOTF(PQ::EOTF(BT709::toBT2020(colour))));
@@ -97,8 +106,10 @@ float3 TestPS(
     //return BT1886::iEOTF(BT1886::EOTF(BT1886::EOTF(BT1886::iEOTF(colour))));
 }
 
-technique Test {
-    pass p0 {
+technique Test
+{
+    pass p0
+    {
         VertexShader = PostProcessVS;
         PixelShader = TestPS;
     }
@@ -106,8 +117,10 @@ technique Test {
 
 technique Tonemapping <
     ui_label = "BT.2408 Static Tonemapping";
-> {
-    pass p0 {
+>
+{
+    pass p0
+    {
         VertexShader = PostProcessVS;
         PixelShader = Tonemapping::ps;
     }
@@ -115,8 +128,10 @@ technique Tonemapping <
 
 technique SDRInHDR <
     ui_label = "BT.2408 SDR -> HDR";
-> {
-    pass p0 {
+>
+{
+    pass p0
+    {
         VertexShader = PostProcessVS;
         PixelShader = SDRInHDR::ps;
     }

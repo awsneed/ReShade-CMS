@@ -95,7 +95,8 @@ _FUNCTION(T1##3, T2##3);
 // space to the CIE XYZ space.  The inverse of the NPM is used to convert from
 // CIE XYZ to the colour space, and will be calculated by a separate matrix
 // inversion function.
-CIEXYZ3 calculateNPM(CIExy4 colourSpaceSpecs) {
+CIEXYZ3 calculateNPM(CIExy4 colourSpaceSpecs)
+{
     // z = [zR, zG, zB, zW]
     float4 zCoords = 1.0 - (colourSpaceSpecs[0] + colourSpaceSpecs[1]);
     float xr = colourSpaceSpecs[0].r;
@@ -146,7 +147,8 @@ CIEXYZ3 calculateNPM(CIExy4 colourSpaceSpecs) {
     );
 };
 
-CIEXYZ3 calculateNPM(CIExy3 primaries, CIExy whitePoint) {
+CIEXYZ3 calculateNPM(CIExy3 primaries, CIExy whitePoint)
+{
     return calculateNPM(CIExy4(
         primaries[0].r, primaries[0].g, primaries[0].b, whitePoint.x,
         primaries[1].r, primaries[1].g, primaries[1].b, whitePoint.y
@@ -154,7 +156,8 @@ CIEXYZ3 calculateNPM(CIExy3 primaries, CIExy whitePoint) {
 };
 
 // Matrix inversion, mainly for finding inverse NPM's
-float3x3 invert(float3x3 m) {
+float3x3 invert(float3x3 m)
+{
     float mDet = determinant(m);
 
     float3x3 adjugate = transpose(
@@ -193,7 +196,8 @@ float3x3 invert(float3x3 m) {
     return adjugate / mDet;
 };
 
-float2x2 invert(float2x2 m) {
+float2x2 invert(float2x2 m)
+{
     float mDet = determinant(m);
 
     float2x2 adjugate = transpose(
@@ -213,7 +217,8 @@ float2x2 invert(float2x2 m) {
     return adjugate / mDet;
 };
 
-namespace Display {
+namespace Display
+{
 uniform Nits peakWhite <
     ui_type = "slider";
     ui_min = 80.0;
@@ -245,7 +250,8 @@ uniform Nits blackLevel <
 > = 0.0;
 }
 
-namespace Content {
+namespace Content
+{
 #define  ENCODING_LINEAR            0
 #define  ENCODING_NONLINEAR_BT709   1
 #define  ENCODING_NONLINEAR_BT2020  2
@@ -309,17 +315,20 @@ uniform Nits blackLevel <
 } // namespace Content
 
 
-namespace Illuminant {
+namespace Illuminant
+{
     static const CIExy D65 = float2(
         0.3127,
         0.3290
     );
 }; // namespace Illuminant
 
-namespace BT601 {
+namespace BT601
+{
     static const CIExy whitePoint = Illuminant::D65;
 
-    namespace NTSC {
+    namespace NTSC
+    {
         // 525-line
         static const CIExy3 primaries = CIExy3(
             0.630, 0.310, 0.155,
@@ -327,7 +336,8 @@ namespace BT601 {
         );
     } // namespace NTSC
 
-    namespace PAL {
+    namespace PAL
+    {
         // 625-line
         static const CIExy3 primaries = CIExy3(
             0.640, 0.290, 0.150,
@@ -337,7 +347,8 @@ namespace BT601 {
 
 } // namespace BT601
 
-namespace BT709 {
+namespace BT709
+{
     static const CIExy whitePoint = Illuminant::D65;
     static const CIExy3 primaries = CIExy3(
         0.640, 0.300, 0.150,
@@ -350,11 +361,13 @@ namespace BT709 {
 
 } // namespace BT709
 
-namespace BT2035 {
+namespace BT2035
+{
     static const Nits whiteLevel = 100.0;
 } // namespace BT2035
 
-namespace sRGB {
+namespace sRGB
+{
     static const CIExy whitePoint = BT709::whitePoint;
     static const CIExy3 primaries = BT709::primaries;
     static const Nits whiteLevel = 80.0;
@@ -391,7 +404,8 @@ namespace sRGB {
 
 } // namespace sRGB
 
-namespace scRGB {
+namespace scRGB
+{
     static const CIExy whitePoint = BT709::whitePoint;
     static const CIExy3 primaries = BT709::primaries;
     static const Nits peakWhite = 10000.0;
@@ -412,7 +426,8 @@ T1 inversePowerLawGamma(T2 value, float power)                                 \
 };
 _AUTO_FUNC(_INVERSE_POWER_LAW_GAMMA, Nonlinear, Linear);
 
-namespace G22 {
+namespace G22
+{
     static const Nits whiteLevel = BT2035::whiteLevel;
 
     #define _G22_EOTF(T1, T2)                                                  \
@@ -431,7 +446,8 @@ namespace G22 {
 
 } // namespace Gamma22
 
-namespace BT1886 {
+namespace BT1886
+{
     // TODO: Consider configurable display peak and display black levels for
     // BT1886's scaling properties.
     //
@@ -456,7 +472,8 @@ namespace BT1886 {
 
 } // namespace BT1886
 
-namespace BT2020 {
+namespace BT2020
+{
     static const CIExy whitePoint = Illuminant::D65;
     static const CIExy3 primaries = CIExy3(
         0.708, 0.170, 0.131,
@@ -498,7 +515,8 @@ namespace BT2020 {
     };
 } // namespace BT2020
 
-namespace BT709 {
+namespace BT709
+{
     BT2020Nonlinear3 toBT2020(BT709Nonlinear3 value)
     {
         static const CIEXYZ3 testBT709NPM = CIEXYZ3(
@@ -534,11 +552,13 @@ namespace BT709 {
     };
 } // namespace BT709
 
-namespace BT2100 {
+namespace BT2100
+{
     static const Nits diffuseWhite = 203.0;
 } // namespace BT2100
 
-namespace PQ {
+namespace PQ
+{
     static const CIExy whitePoint = BT2020::whitePoint;
     static const CIExy3 primaries = BT2020::primaries;
 
@@ -572,7 +592,8 @@ namespace PQ {
 
 } // namespace PQ
 
-namespace HLG {
+namespace HLG
+{
     static const CIExy whitePoint = BT2020::whitePoint;
     static const CIExy3 primaries = BT2020::primaries;
 
@@ -587,7 +608,8 @@ namespace HLG {
 
 } // namespace HLG
 
-namespace ICtCp {
+namespace ICtCp
+{
     // ICtCp deals with 16-bit linear RGB
     // Display-referred: 1.0 = 1.0 nit
     // Scene-referred: 1.0 = maximum diffuse white
@@ -601,14 +623,16 @@ namespace ICtCp {
          99.0, 309.0, 3688.0
     );
 
-    namespace PQ {
+    namespace PQ
+    {
         static const float3x3 ICtCpCoefficients = float3x3(
               2048.0,   2048.0,     0.0,
               6610.0, -13613.0,  7003.0,
              17933.0, -17390.0,  -543.0
         );
 
-        float3 encode(Nits3 RGBColour) {
+        float3 encode(Nits3 RGBColour)
+        {
             float3 LMSNonlinear = PQ::iEOTF(
                 mul(LMSCoefficients, RGBColour) / 4096.0
             );
@@ -616,7 +640,8 @@ namespace ICtCp {
             return mul(ICtCpCoefficients, LMSNonlinear) / 4096;
         };
 
-        float3 decode(float3 ICtCpColour) {
+        float3 decode(float3 ICtCpColour)
+        {
             static const float3x3 iICtCpCoefficients = invert(ICtCpCoefficients);
             static const float3x3 iLMSCoefficients   = invert(LMSCoefficients);
 
@@ -629,10 +654,12 @@ namespace ICtCp {
     } // namespace ICtCp::PQ
 } // namespace ICtCp
 
-namespace XYZ {
+namespace XYZ
+{
 } // namespace XYZ
 
-namespace Tonemapping {
+namespace Tonemapping
+{
     #define _BT2408_T(T1, T2)                                                  \
     T1 T(T2 A, float KS)                                                       \
     {                                                                          \
@@ -708,7 +735,8 @@ namespace Tonemapping {
 
 } // namespace Tonemapping
 
-namespace Content {
+namespace Content
+{
     #define _CONTENT_TO_LINEAR(T1, T2)                                         \
     T1 toLinear(T2 colour) {                                                   \
         /* TODO: Account for pre-existing EOTF */                              \
