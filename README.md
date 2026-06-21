@@ -15,6 +15,7 @@ worked with shaders or HLSL, so once again: Here be dragons.
 - [x] ~~Fix tonemapping (not sure what I did wrong)~~
 - [x] ~~Add proper ICtCp color conversion in tonemapping (it will be the
   default)~~
+- [ ] Look into tonemapping output being slightly over the peak
 - [ ] Technique for applying the same gamma adjustment that would've applied to
   a SDR -> HDR image, but on already-native HDR images. Should be pretty simple
   I think.
