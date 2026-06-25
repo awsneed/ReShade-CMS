@@ -15,17 +15,30 @@ worked with shaders or HLSL, so once again: Here be dragons.
 - [x] ~~Fix tonemapping (not sure what I did wrong)~~
 - [x] ~~Add proper ICtCp color conversion in tonemapping (it will be the
   default)~~
-- [ ] Look into tonemapping output being slightly over the peak
+- [ ] Look into tonemapping output being slightly over the configured peak.
+    - Maybe it's fine? Is it only scRGB due to the BT.2020 -> BT.709 at the end?
 - [ ] Technique for applying the same gamma adjustment that would've applied to
   a SDR -> HDR image, but on already-native HDR images. Should be pretty simple
   I think.
+    - The SDR Direct-Mapping shader has that gamma adjust code in one block, so
+      yeah probably easy to conver that into something without the other
+      conversions.
 - [ ] SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)
+    - Since breaking out more functions, I think this should be easy to
+      implement.
 - [ ] Add more tonemapping methods and a selector for them
+    - RGB at least is easy-enough and already kinda there. ICtCp seems like the
+      best so this is low-priority.
 - [ ] Re-organize code / Take another look or two at my initial macro-based
   typedef shenanigans
+    - [ ] Specifically, figure out splitting up some of the uniforms out of the
+      main ReShadeCMS.fxh. Maybe multiple .fxh files?
 - [ ] Improve performance
+    - Probably saving this for later, and my priority is no visual issues so
+      I'll take the performance impact if it means preventing oddities.
 - [ ] Make a dumb, static BT.2020 -> DCI-P3 perceptual gamut map shader maybe?
-  This might just be a LUT.
+    - This might just be a LUT. Probably not very useful, but could be
+      interesting to do and learn about.
 
 ## Special Thanks
 
