@@ -1,6 +1,8 @@
 #include "ReShadeCMS.fxh"
 
-namespace ReShadeCMS { namespace Misc
+namespace ReShadeCMS
+{
+namespace Misc
 {
 
 float3 TestPS(
@@ -11,7 +13,7 @@ float3 TestPS(
     float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
     // Testing round-trip BT709 -> BT2020 -> BT709;
-    return Content::EOTF(BT2020::toBT709(BT709::toBT2020(Content::iEOTF(colour))));
+    return colour;
 }
 
 technique Test
@@ -23,6 +25,7 @@ technique Test
     }
 }
 
-}} // namespace ReShadeCMS::Misc
+} // namespace Misc
+} // namespace ReShadeCMS
 
 // vim: filetype=shaderslang ts=4 sts=4 sw=4

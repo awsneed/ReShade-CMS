@@ -1,6 +1,8 @@
 #include "ReShadeCMS.fxh"
 
-namespace ReShadeCMS { namespace ToneMapping
+namespace ReShadeCMS
+{
+namespace ToneMapping
 {
 
 float3 toneMap(
@@ -10,37 +12,22 @@ float3 toneMap(
 {
     float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
-    switch (BUFFER_COLOR_SPACE)
-    {
-    case COLOUR_SPACE_SCRGB:
-        colour = Content::EOTF(
-            BT709::toBT2020(Content::iEOTF(colour)));
-        colour /= BT2100::PQ::peakWhite / sRGB::whiteLevel;
-        break;
-    default:
-        break;
-    }
+    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+    colour = BT709::toBT2020(colour);
+    colour /= BT2100::PQ::peakWhite / sRGB::whiteLevel;
+    #endif
 
-    // TODO: Add switch logic for different methods.
-    // TODO: Fix for new naming conventions
-    /*
-    colour = ICtCp::PQ::decode(
-        ToneMapping::inICtCp(
-            ICtCp::PQ::encode(colour)
-        )
-    );
-    */
+    colour = 
+        LMS::toRGB(
+            ICtCp::PQ::toLMS(
+                ToneMapping::inICtCp(
+            LMS::PQ::toICtCp(
+        RGB::toLMS(colour)))));
 
-    switch (BUFFER_COLOR_SPACE)
-    {
-    case COLOUR_SPACE_SCRGB:
-        colour *= BT2100::PQ::peakWhite / sRGB::whiteLevel;
-        colour = Content::EOTF(
-            BT2020::toBT709(Content::iEOTF(colour)));
-        break;
-    default:
-        break;
-    }
+    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+    colour = BT2020::toBT709(colour);
+    colour *= BT2100::PQ::peakWhite / sRGB::whiteLevel;
+    #endif
 
     return colour;
 }
@@ -56,6 +43,7 @@ technique toneMap <
     }
 }
 
-}} // namespace ReShadeCMS::ToneMapping
+} // namespace ToneMapping
+} // namespace ReShadeCMS
 
 // vim: filetype=shaderslang ts=4 sts=4 sw=4

@@ -70,7 +70,8 @@ _FUNCTION(T1##3, T2##3);
 #define  BT2020Colour2           NonLinearColour2
 #define  BT2020Colour3           NonLinearColour3
 #define  ICtCpColour             float3
-#define  LMSColour               float3
+#define  LMSLinear               float3
+#define  LMSNonLinear            float3
 // CIEColour types:
 // Rows = X|Y|Z|x|y, Columns = R|G|B|W
 // Examples:
@@ -272,27 +273,6 @@ uniform LinearColour blackLevel <
 
 namespace Content
 {
-#define  ENCODING_LINEAR                0
-#define  ENCODING_NONLINEAR_BT601       1
-#define  ENCODING_NONLINEAR_BT709       2
-#define  ENCODING_NONLINEAR_BT2020      3
-#define  ENCODING_NONLINEAR_BT2100_PQ   4
-#define  ENCODING_NONLINEAR_BT2100_HLG  5
-
-uniform uint encoding <
-    ui_type = "combo";
-    ui_items = 
-        "Linear \0"
-        "Non-linear BT.601 \0"
-        "Non-linear BT.709 \0"
-        "Non-linear BT.2020 \0"
-        "Non-linear BT.2100 PQ \0"
-        "Non-linear BT.2100 HLG \0";
-    ui_label = "Buffer Encoding";
-    ui_category = "Content Settings";
-    uiColourext = "Buffer NonLinearColour Space = " BUFFER_COLOR_SPACE_STRING;
-> = ENCODING_LINEAR;
-
 #define  EOTF_NONE    0
 #define  EOTF_SRGB    1
 #define  EOTF_G22     2
@@ -521,7 +501,7 @@ namespace BT2020
         0.292, 0.797, 0.046
     );
 
-    BT709Colour3 toBT709(BT2020Colour3 value)
+    LinearNormColour3 toBT709(LinearNormColour3 value)
     {
         static const CIEXYZColour3 testBT2020NPM = CIEXYZColour3(
              0.6370,  0.1446,  0.1689,
@@ -542,23 +522,16 @@ namespace BT2020
             invert(calculateNPM(BT709::primaries, BT709::whitePoint));
         static const CIEXYZColour3 coefficients = mul(BT709InverseNPM, BT2020NPM);
 
-        /* Non-linear to linear conversion from normalized R'G'B' signals
-         * E'rE'gE'b (BT.2020) to linear normalized ErEgEb (BT.2020),
-         * display-referred */
-        value = BT1886::EOTF(value);
-
         /* Matrix convert linear normalized BT.202 display light to BT.709 */
         value = mul(coefficients, value);
 
-        /* Convert from linear display light back to nonlinear */
-        return BT1886::iEOTF(value);
-        //return value;
+        return value;
     };
 } // namespace BT2020
 
 namespace BT709
 {
-    BT2020Colour3 toBT2020(BT709Colour3 value)
+    LinearNormColour3 toBT2020(LinearNormColour3 value)
     {
         static const CIEXYZColour3 testBT709NPM = CIEXYZColour3(
              0.4124,  0.3576,  0.1805,
@@ -579,17 +552,10 @@ namespace BT709
             invert(calculateNPM(BT2020::primaries, BT2020::whitePoint));
         static const CIEXYZColour3 coefficients = mul(BT2020InverseNPM, BT709NPM);
 
-
-        /* Non-linear to linear conversion from normalized R'G'B' signals
-         * E'rE'gE'b (BT.709) to linear normalized ErEgEb (BT.709),
-         * display-referred */
-        value = BT1886::EOTF(value);
-
         /* Matrix convert linear normalized BT.709 display light to BT.2020 */
         value = max(0.0, mul(coefficients, value));
 
-        /* Convert from linear display light back to nonlinear */
-        return BT1886::iEOTF(value);
+        return value;
     };
 } // namespace BT709
 
@@ -665,35 +631,34 @@ namespace RGB
          1688.0,  2146.0,   262.0,
           683.0,  2951.0,   462.0,
            99.0,   309.0,  3688.0
-    );
+    ) / 4096.0;
 
-    float3 toLMS(LinearColour3 colour)
+    LMSLinear toLMS(LinearColour3 colour)
     {
-        return float3(
-            dot(LMSCoefficients[0], colour),
-            dot(LMSCoefficients[1], colour),
-            dot(LMSCoefficients[2], colour)
-        ) / 4096.0;
+        return mul(LMSCoefficients, colour);
     };
 }
 
 namespace LMS
 {
+
+    LinearColour3 toRGB(LMSLinear colour)
+    {
+        static const float3x3 RGBCoefficients = invert(RGB::LMSCoefficients);
+        return mul(RGBCoefficients, colour);
+    }
+
     namespace PQ
     {
         static const float3x3 ICtCpCoefficients = float3x3(
                   2048.0,   2048.0,     0.0,
                   6610.0, -13613.0,  7003.0,
                  17933.0, -17390.0,  -543.0
-        );
+        ) / 4096.0;
 
-        float3 toICtCp(LinearColour3 colour)
+        ICtCpColour toICtCp(LMSLinear colour)
         {
-            return float3(
-                dot(ICtCpCoefficients[0], colour),
-                dot(ICtCpCoefficients[1], colour),
-                dot(ICtCpCoefficients[2], colour)
-                ) / 4096.0;
+            return mul(ICtCpCoefficients, BT2100::PQ::iEOTF(colour));
         };
     }
     namespace HLG
@@ -702,16 +667,14 @@ namespace LMS
                 2048.0,  2048.0,     0.0,
                 3625.0, -7465.0,  3840.0,
                 9500.0, -9212.0,  -288.0
-        );
+        ) / 4096.0;
 
-        float3 toICtCp(LinearColour3 colour)
+        /*
+        ICtCpColour toICtCp(LinearColour3 colour)
         {
-            return float3(
-                dot(ICtCpCoefficients[0], colour),
-                dot(ICtCpCoefficients[1], colour),
-                dot(ICtCpCoefficients[2], colour)
-                ) / 4096.0;
+            return mul(ICtCpCoefficients, BT2100::HLG::iEOTF(colour));
         };
+        */
     }
 } // namespace LMS
 
@@ -723,7 +686,28 @@ namespace ICtCp
     
     namespace PQ
     {
+        LMSLinear toLMS(ICtCpColour colour)
+        {
+            static const float3x3 LMSCoefficients = 
+                invert(LMS::PQ::ICtCpCoefficients);
+
+            return BT2100::PQ::EOTF(mul(LMSCoefficients, colour));
+        };
+
     } // namespace ICtCp::PQ
+
+    namespace HLG
+    {
+        LMSLinear toLMS(ICtCpColour colour)
+        {
+            static const float3x3 LMSCoefficients = 
+                invert(LMS::HLG::ICtCpCoefficients);
+
+            return HLG::EOTF(mul(LMSCoefficients, colour));
+        };
+
+    } // namespace ICtCp::HLG
+
 } // namespace ICtCp
 
 namespace XYZ
@@ -809,63 +793,121 @@ namespace ToneMapping
 
 namespace Content
 {
-    #define _CONTENT_EOTF(T1, T2) \
-    T1 EOTF(T2 colour) { \
-        /* TODO: Account for pre-existing EOTF */ \
-        switch (newEOTF) { \
-        case EOTF_NONE: \
-        case EOTF_SRGB: \
-            colour = sRGB::EOTF(colour); \
-            break; \
-        case EOTF_G22: \
-            colour = G22::EOTF(colour); \
-            break; \
-        case EOTF_BT1886: \
-            colour = BT1886::EOTF(colour); \
-            break; \
-        case EOTF_PQ: \
-            colour = BT2100::PQ::EOTF(colour); \
-            break; \
-        case EOTF_HLG: \
-            /* TODO */ \
-            /*colour = HLG::EOTF(colour); */ \
-            /*break; */ \
-        default: \
-            break; \
+    #define _CONTENT_TO_OLD_EOTF(T1, T2) \
+    T1 toOldEOTF(T2 colour) { \
+        switch (oldEOTF) \
+        { \
+            case EOTF_SRGB: \
+                colour = sRGB::EOTF(colour); \
+                break; \
+            case EOTF_G22: \
+                colour = G22::EOTF(colour); \
+                break; \
+            case EOTF_BT1886: \
+                colour = BT1886::EOTF(colour); \
+                break; \
+            case EOTF_PQ: \
+                colour = BT2100::PQ::EOTF(colour); \
+                break; \
+            case EOTF_HLG: \
+                /* TODO */ \
+                /*colour = HLG::EOTF(colour); */ \
+                /*break; */ \
+            case EOTF_NONE: \
+            default: \
+                break; \
         } \
         \
         return colour; \
     };
-    _AUTO_FUNC(_CONTENT_EOTF, LinearColour, NonLinearColour);
+    _AUTO_FUNC(_CONTENT_TO_OLD_EOTF, LinearColour, NonLinearColour);
 
-    #define _CONTENT_INVERSE_EOTF(T1, T2) \
-    T1 iEOTF(T2 colour) { \
-        /* TODO: Account for pre-existing EOTF */ \
-        switch (newEOTF) { \
-        case EOTF_NONE: \
-        case EOTF_SRGB: \
-            colour = sRGB::iEOTF(colour); \
-            break; \
-        case EOTF_G22: \
-            colour = G22::iEOTF(colour); \
-            break; \
-        case EOTF_BT1886: \
-            colour = BT1886::iEOTF(colour); \
-            break; \
-        case EOTF_PQ: \
-            colour = BT2100::PQ::iEOTF(colour); \
-            break; \
-        case EOTF_HLG: \
-            /* TODO */ \
-            /*colour = HLG::iEOTF(colour); */ \
-            /*break; */ \
-        default: \
-            break; \
+    #define _CONTENT_TO_NEW_EOTF(T1, T2) \
+    T1 toNewEOTF(T2 colour) { \
+        switch (newEOTF) \
+        { \
+            case EOTF_SRGB: \
+                colour = sRGB::EOTF(colour); \
+                break; \
+            case EOTF_G22: \
+                colour = G22::EOTF(colour); \
+                break; \
+            case EOTF_BT1886: \
+                colour = BT1886::EOTF(colour); \
+                break; \
+            case EOTF_PQ: \
+                colour = BT2100::PQ::EOTF(colour); \
+                break; \
+            case EOTF_HLG: \
+                /* TODO */ \
+                /*colour = HLG::EOTF(colour); */ \
+                /*break; */ \
+            case EOTF_NONE: \
+            default: \
+                break; \
         } \
         \
         return colour; \
     };
-    _AUTO_FUNC(_CONTENT_INVERSE_EOTF, NonLinearColour, LinearColour);
+    _AUTO_FUNC(_CONTENT_TO_NEW_EOTF, LinearColour, NonLinearColour);
+
+    #define _CONTENT_TO_OLD_INVERSE_EOTF(T1, T2) \
+    T1 toOldIEOTF(T2 colour) { \
+        switch (oldEOTF) \
+        { \
+            case EOTF_SRGB: \
+                colour = sRGB::iEOTF(colour); \
+                break; \
+            case EOTF_G22: \
+                colour = G22::iEOTF(colour); \
+                break; \
+            case EOTF_BT1886: \
+                colour = BT1886::iEOTF(colour); \
+                break; \
+            case EOTF_PQ: \
+                colour = BT2100::PQ::iEOTF(colour); \
+                break; \
+            case EOTF_HLG: \
+                /* TODO */ \
+                /*colour = HLG::iEOTF(colour); */ \
+                /*break; */ \
+            case EOTF_NONE: \
+            default: \
+                break; \
+        } \
+        \
+        return colour; \
+    };
+    _AUTO_FUNC(_CONTENT_TO_OLD_INVERSE_EOTF, NonLinearColour, LinearColour);
+
+    #define _CONTENT_TO_NEW_INVERSE_EOTF(T1, T2) \
+    T1 toNewIEOTF(T2 colour) { \
+        switch (newEOTF) \
+        { \
+            case EOTF_SRGB: \
+                colour = sRGB::iEOTF(colour); \
+                break; \
+            case EOTF_G22: \
+                colour = G22::iEOTF(colour); \
+                break; \
+            case EOTF_BT1886: \
+                colour = BT1886::iEOTF(colour); \
+                break; \
+            case EOTF_PQ: \
+                colour = BT2100::PQ::iEOTF(colour); \
+                break; \
+            case EOTF_HLG: \
+                /* TODO */ \
+                /*colour = HLG::iEOTF(colour); */ \
+                /*break; */ \
+            case EOTF_NONE: \
+            default: \
+                break; \
+        } \
+        \
+        return colour; \
+    };
+    _AUTO_FUNC(_CONTENT_TO_NEW_INVERSE_EOTF, NonLinearColour, LinearColour);
 } // namespace Content
 
 } // namespace ReShadeCMS
