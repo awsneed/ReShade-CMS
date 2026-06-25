@@ -24,6 +24,8 @@ worked with shaders or HLSL, so once again: Here be dragons.
 - [ ] Re-organize code / Take another look or two at my initial macro-based
   typedef shenanigans
 - [ ] Improve performance
+- [ ] Make a dumb, static BT.2020 -> DCI-P3 perceptual gamut map shader maybe?
+  This might just be a LUT.
 
 ## Special Thanks
 
