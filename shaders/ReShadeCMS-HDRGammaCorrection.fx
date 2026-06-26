@@ -2,7 +2,7 @@
 
 namespace ReShadeCMS
 {
-namespace SDRMapping
+namespace HDRGammaCorrection
 {
 uniform LinearColour diffuseWhite <
     ui_type = "slider";
@@ -11,17 +11,8 @@ uniform LinearColour diffuseWhite <
     ui_max = 405.0;
     ui_label = "Diffuse White";
     ui_units = " nits";
-#if defined(RESHADECMS_CUSTOM_DEFAULT_DIFFUSEWHITE)
-> = RESHADECMS_CUSTOM_DEFAULT_PEAKWHITE;
-#else
+    ui_tooltip = "The game's diffuse white level.";
 > = 203.0;
-#endif
-
-uniform bool gammaEnabled <
-    ui_tooltip = "When scaling SDR from 100 nits to 203 nits, an adjustment of "
-        "1.15 - 1.16 is recommended to preserve the look of shadows and midtones.";
-    ui_label = "Adjust Gamma";
-> = true;
 
 uniform float gamma <
     ui_type = "slider";
@@ -31,18 +22,30 @@ uniform float gamma <
     ui_label = "Gamma Power";
 > = 1.155;
 
-float3 directMap(
+float3 correctGammaPS(
     float4 pos : SV_POSITION,
     float2 texcoord : TexCoord
 ) : SV_Target
 {
     float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
+    // Return to SDR nits as if it had been mapped up
+    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
     colour = BT709::toBT2020(colour);
+    colour /= diffuseWhite / sRGB::whiteLevel;
+    #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+    colour *= BT2100::PQ::peakWhite / BT1886::whiteLevel;
+    colour /= diffuseWhite / BT1886::whiteLevel;
+    #endif
 
     float Y = dot(float3(0.2627, 0.6780, 0.0593), colour);
+
+    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
     float Y203 = (diffuseWhite / scRGB::diffuseWhite)
-        * (gammaEnabled ? (sign(Y) * pow(abs(Y), gamma)) : abs(Y));
+    #else
+    float Y203 = (diffuseWhite / BT1886::whiteLevel)
+    #endif
+        * (sign(Y) * pow(abs(Y), gamma));
     float scale = Y != 0.0 ? Y203 / Y : 0.0;
     colour *= scale;
 
@@ -56,14 +59,14 @@ float3 directMap(
     return colour;
 }
 
-technique directMap <
-    ui_label = "Direct-Map SDR";
+technique correctGamma <
+    ui_label = "HDR Gamma Correction";
 >
 {
     pass p0
     {
         VertexShader = PostProcessVS;
-        PixelShader = directMap;
+        PixelShader = correctGammaPS;
     }
 }
 
