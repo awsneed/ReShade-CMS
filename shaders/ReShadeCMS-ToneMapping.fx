@@ -72,8 +72,7 @@ uniform uint mappingSpace <
 
 float3 toneMappingPS(
     float4 pos : SV_POSITION,
-    float2 texcoord : TexCoord
-) : SV_Target
+    float2 texcoord : TexCoord) : SV_Target
 {
     float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
@@ -131,6 +130,7 @@ float3 toneMappingPS(
     return colour;
 }
 
+#if BUFFER_COLOR_SPACE != COLOUR_SPACE_SRGB
 technique toneMap <
     ui_label = "Static Tone Mapping";
 >
@@ -141,6 +141,7 @@ technique toneMap <
         PixelShader = toneMappingPS;
     }
 }
+#endif
 
 } // namespace ToneMapping
 } // namespace ReShadeCMS

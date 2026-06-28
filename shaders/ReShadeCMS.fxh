@@ -35,6 +35,10 @@ _FUNCTION(T1##3, T2##3);
 #define  BUFFER_COLOR_SPACE_STRING  "HLG"
 #endif
 
+#if BUFFER_COLOR_SPACE != COLOUR_SPACE_SRGB
+    #define BUFFER_IS_HDR true
+#endif
+
 // Macro types to help understand what is what at what time. Might redo this or
 // get rid of it, but I was hoping it would help understanding and organization.
 //
@@ -667,6 +671,32 @@ namespace ToneMapping
     };
 
 } // namespace ToneMapping
+
+LinearColour3 scaleTo(LinearColour3 colour, Nits whiteLevel)
+{
+    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+    colour *= whiteLevel / BT2100::PQ::peakWhite;
+    #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+    colour *= whiteLevel / BT2100::HLG::peakWhite;
+    #else
+    colour /= whiteLevel / sRGB::whiteLevel;
+    #endif
+
+    return colour;
+}
+
+LinearColour3 scaleFrom(LinearColour3 colour, Nits whiteLevel)
+{
+    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+    colour /= whiteLevel / BT2100::PQ::peakWhite;
+    #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+    colour /= whiteLevel / BT2100::HLG::peakWhite;
+    #else
+    colour *= whiteLevel / sRGB::whiteLevel;
+    #endif
+
+    return colour;
+}
 
 #define  EOTF_NONE    0
 #define  EOTF_SRGB    1

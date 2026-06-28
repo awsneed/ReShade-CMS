@@ -33,8 +33,7 @@ uniform float gamma <
 
 float3 directMap(
     float4 pos : SV_POSITION,
-    float2 texcoord : TexCoord
-) : SV_Target
+    float2 texcoord : TexCoord) : SV_Target
 {
     float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
@@ -56,6 +55,7 @@ float3 directMap(
     return colour;
 }
 
+#if BUFFER_COLOR_SPACE != COLOUR_SPACE_SRGB
 technique directMap <
     ui_label = "Direct-Map SDR";
 >
@@ -66,8 +66,9 @@ technique directMap <
         PixelShader = directMap;
     }
 }
+#endif
 
-} // namespace SdrMapping
+} // namespace SDRMapping
 } // namespace ReShadeCMS
 
 // vim: filetype=shaderslang ts=4 sts=4 sw=4
