@@ -4,6 +4,7 @@ namespace ReShadeCMS
 {
 namespace SDRMapping
 {
+
 uniform LinearColour diffuseWhite <
     ui_type = "slider";
     ui_min = 1.0;
@@ -31,11 +32,11 @@ uniform float gamma <
     ui_label = "Gamma Power";
 > = 1.155;
 
-float3 directMap(
+float3 directMapPS(
     float4 pos : SV_POSITION,
     float2 texcoord : TexCoord) : SV_Target
 {
-    float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    float3 colour = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 
     colour = BT709::toBT2020(colour);
 
@@ -63,7 +64,7 @@ technique directMap <
     pass p0
     {
         VertexShader = PostProcessVS;
-        PixelShader = directMap;
+        PixelShader = directMapPS;
     }
 }
 #endif

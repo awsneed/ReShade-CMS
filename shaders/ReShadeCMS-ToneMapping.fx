@@ -5,6 +5,23 @@ namespace ReShadeCMS
 namespace ToneMapping
 {
 
+#define MAPPING_SPACE_ICTCP  0
+#define MAPPING_SPACE_YCBCR  1
+#define MAPPING_SPACE_YRGB   2
+#define MAPPING_SPACE_RGB    3
+#define MAPPING_SPACE_MAXRGB 4
+
+uniform uint mappingSpace <
+    ui_type = "combo";
+    ui_items = 
+        "ICtCp\0"
+        "Y'Cb'Cr'\0"
+        "YRGB\0"
+        "R'G'B'\0"
+        "maxRGB\0";
+    ui_label = "Mapping Space";
+> = MAPPING_SPACE_ICTCP;
+
 uniform LinearColour displayWhite <
     ui_type = "slider";
     ui_min = 80.0;
@@ -53,28 +70,11 @@ uniform LinearColour contentBlack <
     ui_units = " nits";
 > = 0.0;
 
-#define MAPPING_SPACE_ICTCP  0
-#define MAPPING_SPACE_YCBCR  1
-#define MAPPING_SPACE_YRGB   2
-#define MAPPING_SPACE_RGB    3
-#define MAPPING_SPACE_MAXRGB 4
-
-uniform uint mappingSpace <
-    ui_type = "combo";
-    ui_items = 
-        "ICtCp\0"
-        "Y'Cb'Cr'\0"
-        "YRGB\0"
-        "R'G'B'\0"
-        "maxRGB\0";
-    ui_label = "Mapping Space";
-> = MAPPING_SPACE_ICTCP;
-
 float3 toneMappingPS(
     float4 pos : SV_POSITION,
     float2 texcoord : TexCoord) : SV_Target
 {
-    float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    float3 colour = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 
     #if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
     colour = BT709::toBT2020(colour);

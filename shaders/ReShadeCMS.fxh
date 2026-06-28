@@ -19,24 +19,37 @@ _FUNCTION(T1##3, T2##3);
 #define  COLOUR_SPACE_PQ       3
 #define  COLOUR_SPACE_HLG      4
 
-#if      BUFFER_COLOR_SPACE ==      COLOUR_SPACE_UNKNOWN
-#define  BUFFER_COLOR_SPACE_STRING  "Unknown"
-
-#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_SRGB
-#define  BUFFER_COLOR_SPACE_STRING  "sRGB"
-
-#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_SCRGB
-#define  BUFFER_COLOR_SPACE_STRING  "scRGB"
-
-#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_PQ
-#define  BUFFER_COLOR_SPACE_STRING  "PQ"
-
-#elif    BUFFER_COLOR_SPACE ==      COLOUR_SPACE_HLG
-#define  BUFFER_COLOR_SPACE_STRING  "HLG"
+#if          BUFFER_COLOR_SPACE ==      COLOUR_SPACE_UNKNOWN
+    #define  BUFFER_COLOR_SPACE_STRING  "Unknown"
+#elif        BUFFER_COLOR_SPACE ==      COLOUR_SPACE_SRGB
+    #define  BUFFER_COLOR_SPACE_STRING  "sRGB"
+#elif        BUFFER_COLOR_SPACE ==      COLOUR_SPACE_SCRGB
+    #define  BUFFER_COLOR_SPACE_STRING  "scRGB"
+#elif        BUFFER_COLOR_SPACE ==      COLOUR_SPACE_PQ
+    #define  BUFFER_COLOR_SPACE_STRING  "PQ"
+#elif        BUFFER_COLOR_SPACE ==      COLOUR_SPACE_HLG
+    #define  BUFFER_COLOR_SPACE_STRING  "HLG"
 #endif
 
 #if BUFFER_COLOR_SPACE != COLOUR_SPACE_SRGB
     #define BUFFER_IS_HDR true
+#endif
+
+#define  EOTF_NONE    0
+#define  EOTF_SRGB    1
+#define  EOTF_G22     2
+#define  EOTF_BT1886  3
+#define  EOTF_PQ      4
+#define  EOTF_HLG     5
+
+#if         BUFFER_COLOR_SPACE == COLOUR_SPACE_SRGB || BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+    #define EOTF_DEFAULT          EOTF_SRGB
+#elif       BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+    #define EOTF_DEFAULT          EOTF_PQ
+#elif       BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+    #define EOTF_DEFAULT          EOTF_HLG
+#else
+    #define EOTF_DEFAULT          EOTF_NONE
 #endif
 
 // Macro types to help understand what is what at what time. Might redo this or
@@ -362,7 +375,7 @@ namespace scRGB
 {
     static const CIExyColour whitePoint = BT709::whitePoint;
     static const CIExyColour3 primaries = BT709::primaries;
-    static const LinearColour peakWhite = 10000.0;
+    static const LinearColour peakWhite = 10000.0; // Technically no limit
     static const LinearColour diffuseWhite = sRGB::whiteLevel;
 } // namespace scRGB
 
@@ -466,7 +479,7 @@ namespace BT2100
 
     namespace HLG
     {
-        static const LinearColour peak = 1000.0;
+        static const LinearColour peakWhite = 1000.0;
         static const float a = 0.17883277;
         static const float b = 1.0 - 4.0 * a;
         // c requires log(), so will calculate in functions that need it
@@ -606,8 +619,7 @@ namespace ToneMapping
         const Nits displayWhite, \
         const Nits displayBlack, \
         const Nits contentWhite, \
-        const Nits contentBlack \
-    ) \
+        const Nits contentBlack) \
     { \
         /* Bunch of simplification setup */ \
         float displayBlackNorm = BT2100::PQ::iEOTF(displayBlack / BT2100::PQ::peakWhite); \
@@ -672,39 +684,6 @@ namespace ToneMapping
 
 } // namespace ToneMapping
 
-LinearColour3 scaleTo(LinearColour3 colour, Nits whiteLevel)
-{
-    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
-    colour *= whiteLevel / BT2100::PQ::peakWhite;
-    #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
-    colour *= whiteLevel / BT2100::HLG::peakWhite;
-    #else
-    colour /= whiteLevel / sRGB::whiteLevel;
-    #endif
-
-    return colour;
-}
-
-LinearColour3 scaleFrom(LinearColour3 colour, Nits whiteLevel)
-{
-    #if BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
-    colour /= whiteLevel / BT2100::PQ::peakWhite;
-    #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
-    colour /= whiteLevel / BT2100::HLG::peakWhite;
-    #else
-    colour *= whiteLevel / sRGB::whiteLevel;
-    #endif
-
-    return colour;
-}
-
-#define  EOTF_NONE    0
-#define  EOTF_SRGB    1
-#define  EOTF_G22     2
-#define  EOTF_BT1886  3
-#define  EOTF_PQ      4
-#define  EOTF_HLG     5
-
 #define _USE_EOTF(T1, T2) \
 T1 useEOTF(T2 colour, const uint targetEOTF) { \
     switch (targetEOTF) \
@@ -762,6 +741,38 @@ T1 useIEOTF(T2 colour, const uint targetEOTF) { \
     return colour; \
 };
 _AUTO_FUNC(_USE_INVERSE_EOTF, NonLinearColour, LinearColour);
+
+// Conversion constants
+namespace sRGB
+{
+    static const float scaleToBT1886 =     BT1886::whiteLevel / whiteLevel;
+    static const float scaleToHLG    = BT2100::HLG::peakWhite / whiteLevel;
+    static const float scaleToPQ     =  BT2100::PQ::peakWhite / whiteLevel;
+}
+
+namespace BT1886
+{
+    static const float scaleToSRGB =       sRGB::whiteLevel / whiteLevel;
+    static const float scaleToHLG  = BT2100::HLG::peakWhite / whiteLevel;
+    static const float scaleToPQ   =  BT2100::PQ::peakWhite / whiteLevel;
+}
+
+namespace BT2100
+{
+    namespace PQ
+    {
+        static const float scaleToSRGB   =       sRGB::whiteLevel / peakWhite;
+        static const float scaleToBT1886 =     BT1886::whiteLevel / peakWhite;
+        static const float scaleToHLG    = BT2100::HLG::peakWhite / peakWhite;
+    }
+
+    namespace HLG
+    {
+        static const float scaleToSRGB   =      sRGB::whiteLevel / peakWhite;
+        static const float scaleToBT1886 =    BT1886::whiteLevel / peakWhite;
+        static const float scaleToPQ     = BT2100::PQ::peakWhite / peakWhite;
+    }
+}
 
 } // namespace ReShadeCMS
 

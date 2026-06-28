@@ -4,6 +4,7 @@ namespace ReShadeCMS
 {
 namespace GammaCorrection
 {
+
 #if defined(BUFFER_IS_HDR)
 uniform LinearColour diffuseWhite <
     ui_type = "slider";
@@ -26,11 +27,13 @@ uniform float gamma <
     ui_label = "Adjustment Power";
 > = 1.155;
 
+/* TODO: Make this the main gamma correction formula here or elsewhere, then
+ * edit SDR Direct Map to call this instead of doing it's own version */
 float3 correctGammaPS(
     float4 pos : SV_POSITION,
     float2 texcoord : TexCoord) : SV_Target
 {
-    float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    float3 colour = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 
     #if defined(BUFFER_IS_HDR)
     // Return to SDR nits as if it had been mapped up

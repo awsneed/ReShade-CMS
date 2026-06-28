@@ -4,16 +4,19 @@ namespace ReShadeCMS
 {
 namespace EOTFCorrection
 {
+
 #if defined(BUFFER_IS_HDR)
-uniform LinearColour diffuseWhite <
+uniform Nits SDRWhite <
     ui_type = "slider";
     ui_min = 1.0;
     ui_step = 1.0;
     ui_max = 405.0;
-    ui_label = "Diffuse White";
+    ui_label = "SDR White";
     ui_units = " nits";
-    ui_tooltip = "Input diffuse white level.";
+    ui_tooltip = "White level for SDR EOTFs.";
 > = 203.0;
+#else
+static const Nits diffuseWhite = 100.0;
 #endif
 
 uniform uint oldEOTF <
@@ -62,49 +65,104 @@ float3 correctEOTFPS(
     float4 pos : SV_POSITION,
     float2 texcoord : TexCoord) : SV_Target
 {
-    float3 colour = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    LinearColour3 colour = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
+    
+    /* Old EOTF Scenarios:
+     * In scRGB, old EOTF is SDR: Scale    80 /   1.0 to diffuseWhite / 1.0
+     * In scRGB, old EOTF is PQ:  Scale 10000 / 125.0 to        10000 / 1.0
+     * In scRGB, old EOTF is HLG: Scale 10000 / 125.0 to         1000 / 1.0
 
-    if (oldEOTF == newEOTF)
-    {
-        return colour;
-    }
+     * In PQ,    old EOTF is SDR: Scale 10000 /   1.0 to diffuseWhite / 1.0
+     * In PQ,    old EOTF is HLG: Scale 10000 /   1.0 to         1000 / 1.0
 
+     * In HLG,   old EOTF is SDR: Scale 1000 /    1.0 to diffuseWhite / 1.0
+     * In HLG,   old EOTF is PQ:  Scale 1000 /    1.0 to        10000 / 1.0
+
+     * In SDR,   old EOTF is SDR: Nothing (This is always the case for SDR)
+     * In PQ,    old EOTF is PQ:  Nothing
+     * In HLG,   old EOTF is HLG: Nothing
+     */
+
+    // Scale normalized values to what the old EOTF is expecting
     #if defined(BUFFER_IS_HDR)
     switch (oldEOTF)
     {
         case EOTF_SRGB:
         case EOTF_G22:
         case EOTF_BT1886:
-            colour = scaleTo(colour, diffuseWhite);
+            #if   BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+            colour *= sRGB::whiteLevel / SDRWhite;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+            colour *= BT2100::PQ::peakWhite / SDRWhite;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+            colour *= BT2100::HLG::peakWhite / SDRWhite;
+            #endif
             break;
         case EOTF_PQ:
+            #if   BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+            colour *= BT2100::PQ::scaleToSRGB;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+            colour *= BT2100::PQ::scaleToHLG;
+            #endif
+            break;
         case EOTF_HLG:
+            #if   BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+            colour *= BT2100::HLG::scaleToSRGB;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+            colour *= BT2100::HLG::scaleToPQ;
+            #endif
+            break;
         case EOTF_NONE:
+            // Might need to add something here in the future?
         default:
             break;
     }
     #endif
 
-    /* TODO: Probably need some special adjustment from PQ to HLG? */
     colour = useIEOTF(colour, oldEOTF);
     colour = useEOTF(colour, newEOTF);
-    
+
+    // TODO: Double-check that this reverse scaling is right
     #if defined(BUFFER_IS_HDR)
     switch (newEOTF)
     {
         case EOTF_SRGB:
         case EOTF_G22:
         case EOTF_BT1886:
-            colour = scaleFrom(colour, diffuseWhite);
+            #if   BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+            colour /= sRGB::whiteLevel / SDRWhite;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+            colour /= BT2100::PQ::peakWhite / SDRWhite;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+            colour /= BT2100::HLG::peakWhite / SDRWhite;
+            #endif
             break;
         case EOTF_PQ:
+            #if   BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+            colour /= BT2100::PQ::scaleToSRGB;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+            colour /= BT2100::PQ::scaleToHLG;
+            #endif
+            break;
         case EOTF_HLG:
+            #if   BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+            colour /= BT2100::HLG::scaleToSRGB;
+            #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+            colour /= BT2100::HLG::scaleToPQ;
+            #endif
+            break;
         case EOTF_NONE:
         default:
             break;
     }
-    #else
+    #endif
+    
+    #if   BUFFER_COLOR_SPACE == COLOUR_SPACE_SRGB
     colour = sRGB::iEOTF(colour);
+    #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+    colour = BT2100::PQ::iEOTF(colour);
+    #elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+    colour = BT2100::HLG::iEOTF(colour);
     #endif
 
     return colour;
