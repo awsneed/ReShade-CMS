@@ -23,10 +23,10 @@ worked with shaders or HLSL, so once again: Here be dragons.
       conversions.~~
 - [ ] Look into tonemapping output being slightly over the configured peak.
     - Maybe it's fine? Is it only scRGB due to the BT.2020 -> BT.709 at the end?
-- [ ] SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)
-    - Since breaking out more functions, I think this should be easy to
+- [x] ~~SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)~~
+    - ~~Since breaking out more functions, I think this should be easy to
       implement. The EOTF Correction shader may already do this? Need to
-      double-check it with SDR, seems underwhelming currently.
+      double-check it with SDR, seems underwhelming currently.~~
 - [ ] Add more tonemapping methods and a selector for them
     - RGB at least is easy-enough and already kinda there. ICtCp seems like the
       best so this is low-priority.
