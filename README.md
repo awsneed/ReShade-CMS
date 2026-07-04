@@ -31,10 +31,15 @@ worked with shaders or HLSL, so once again: Here be dragons.
     - RGB at least is easy-enough and already kinda there. ICtCp seems like the
       best so this is low-priority.
     - Selector has been added, but only ICtCp works at this time.
-- [ ] Re-organize code / Take another look or two at my initial macro-based
-  typedef shenanigans
+- [x] ~~Re-organize code / Take another look or two at my initial macro-based
+  typedef shenanigans~~
     - [x] ~~Specifically, figure out splitting up some of the uniforms out of the
       main ReShadeCMS.fxh. Maybe multiple .fxh files?~~
+    - Removed the macro-based typedefs. Will probably continue to refactor code
+      in the future to make it easier to understand and work with.
+- [ ] PLUGE shader for setting black level for non-reference environments, to be
+  fed into the Static Tone Mapping shader for example to compensate for the
+  ambient lighting.
 - [ ] Improve performance
     - Probably saving this for later, and my priority is no visual issues so
       I'll take the performance impact if it means preventing oddities.
