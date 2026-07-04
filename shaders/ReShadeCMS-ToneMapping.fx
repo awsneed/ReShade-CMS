@@ -82,9 +82,8 @@ float3 staticToneMap(float4 pos : SV_POSITION,
 		colour = LMS::PQ::toICtCp(colour);
 		#endif
 		
-		colour = inICtCp(colour, 
-		                 displayWhite, displayBlack,
-		                 contentWhite, contentBlack);
+		colour = inICtCp(colour, displayWhite, displayBlack,
+		                         contentWhite, contentBlack);
 		
 		#if BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
 		colour = ICtCp::HLG::toLMS(colour);
@@ -99,9 +98,8 @@ float3 staticToneMap(float4 pos : SV_POSITION,
 	case MAPPING_SPACE_YRGB:
 		break;
 	case MAPPING_SPACE_RGB:
-		colour = EETF(colour,
-		              displayWhite, displayBlack,
-		              contentWhite, contentBlack);
+		colour = EETF(colour, displayWhite, displayBlack,
+		                      contentWhite, contentBlack);
 		break;
 	case MAPPING_SPACE_MAXRGB:
 		break;
@@ -118,7 +116,7 @@ float3 staticToneMap(float4 pos : SV_POSITION,
 }
 
 #if BUFFER_COLOR_SPACE != COLOUR_SPACE_SRGB
-technique staticToneMap < ui_label = "Static Tone Mapping"; >
+technique staticToneMap <ui_label = "Static Tone Mapping"; >
 {
 	pass p0
 	{

@@ -19,15 +19,19 @@ _FUNCTION(T1##4, T2##4);
 #define COLOUR_SPACE_PQ      3
 #define COLOUR_SPACE_HLG     4
 
-#if             BUFFER_COLOR_SPACE ==     COLOUR_SPACE_UNKNOWN
+#if   BUFFER_COLOR_SPACE == COLOUR_SPACE_UNKNOWN
 	#define BUFFER_COLOR_SPACE_STRING "Unknown"
-#elif           BUFFER_COLOR_SPACE ==     COLOUR_SPACE_SRGB
+
+#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_SRGB
 	#define BUFFER_COLOR_SPACE_STRING "sRGB"
-#elif           BUFFER_COLOR_SPACE ==     COLOUR_SPACE_SCRGB
+
+#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
 	#define BUFFER_COLOR_SPACE_STRING "scRGB"
-#elif           BUFFER_COLOR_SPACE ==     COLOUR_SPACE_PQ
+
+#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
 	#define BUFFER_COLOR_SPACE_STRING "PQ"
-#elif           BUFFER_COLOR_SPACE ==     COLOUR_SPACE_HLG
+
+#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
 	#define BUFFER_COLOR_SPACE_STRING "HLG"
 #endif
 
@@ -42,12 +46,14 @@ _FUNCTION(T1##4, T2##4);
 #define EOTF_PQ     4
 #define EOTF_HLG    5
 
-#if             BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
-	#define EOTF_DEFAULT          EOTF_PQ
-#elif           BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
-	#define EOTF_DEFAULT          EOTF_HLG
+#if   BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
+	#define EOTF_DEFAULT EOTF_PQ
+
+#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
+	#define EOTF_DEFAULT EOTF_HLG
+
 #else
-	#define EOTF_DEFAULT          EOTF_SRGB
+	#define EOTF_DEFAULT EOTF_SRGB
 #endif
 
 float2x2 minors(float2x2 m)
@@ -540,9 +546,8 @@ T1 EETF(T2 e1, const float displayWhite, const float displayBlack, \
 };
 _AUTO_FUNC(_BT2408_EETF, float, float);
 
-float3 inICtCp(float3 ICtCp,
-	       float displayWhite, float displayBlack,
-	       float contentWhite, float contentBlack)
+float3 inICtCp(float3 ICtCp, float displayWhite, float displayBlack,
+                             float contentWhite, float contentBlack)
 {
 	const float I2 = EETF(ICtCp.x, displayWhite, displayBlack,
 	                               contentWhite, contentBlack);

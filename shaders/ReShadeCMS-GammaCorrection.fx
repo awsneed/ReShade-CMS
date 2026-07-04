@@ -70,7 +70,7 @@ float3 correctGamma(float4 pos : SV_POSITION,
 	return colour;
 }
 
-technique correctGamma < ui_label = "Gamma Correction"; >
+technique correctGamma <ui_label = "Gamma Correction"; >
 {
 	pass p0
 	{

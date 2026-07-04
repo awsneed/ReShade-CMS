@@ -130,7 +130,7 @@ float3 correctEOTF(float4 pos : SV_POSITION,
 	return colour;
 }
 
-technique correctEOTF < ui_label = "EOTF Correction"; >
+technique correctEOTF <ui_label = "EOTF Correction"; >
 {
 	pass p0
 	{

@@ -53,7 +53,7 @@ float3 directMapPS(float4 pos : SV_POSITION,
 }
 
 #if BUFFER_COLOR_SPACE != COLOUR_SPACE_SRGB
-technique directMap < ui_label = "Direct-Map SDR"; >
+technique directMap <ui_label = "Direct-Map SDR"; >
 {
 	pass p0
 	{
