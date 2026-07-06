@@ -10,6 +10,15 @@ default, such as those in ITU BT.2408.
 Mostly I'm creating this for fun and for myself, and this is the first time I've
 worked with shaders or HLSL, so once again: Here be dragons.
 
+## Special Thanks
+
+[Lillium](https://github.com/EndlesslyFlowering) for their [ReShade HDR
+Shaders](https://github.com/EndlesslyFlowering/ReShade_HDR_shaders) project,
+which has been an inspiration for this project and a recurring source of insight
+on my never-ending journey of learning about HDR and all things video / colour
+science. I have made heavy use of the analysis overlay shader in particular
+during the testing of this project. Go check it out!
+
 ## To-do List
 
 - [x] ~~Fix tonemapping (not sure what I did wrong)~~
@@ -50,12 +59,3 @@ worked with shaders or HLSL, so once again: Here be dragons.
 - [ ] Make a dumb, static BT.2020 -> DCI-P3 perceptual gamut map shader maybe?
     - This might just be a LUT. Probably not very useful, but could be
       interesting to do and learn about.
-
-## Special Thanks
-
-[Lillium](https://github.com/EndlesslyFlowering) for their [ReShade HDR
-Shaders](https://github.com/EndlesslyFlowering/ReShade_HDR_shaders) project,
-which has been an inspiration for this project and a recurring source of insight
-on my never-ending journey of learning about HDR and all things video / colour
-science. I have made heavy use of the analysis overlay shader in particular
-during the testing of this project. Go check it out!
