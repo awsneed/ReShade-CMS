@@ -19,6 +19,12 @@ on my never-ending journey of learning about HDR and all things video / colour
 science. I have made heavy use of the analysis overlay shader in particular
 during the testing of this project. Go check it out!
 
+[Crosire](https://github.com/crosire) and all those who develop
+[ReShade](https://github.com/crosire/reshade) and the [ReShade-Shaders
+repo](https://github.com/crosire/reshade-shaders), as this project obviously
+depends on the former and the latter has served as a good reference and example
+for my studies.
+
 ## To-do List
 
 - [x] ~~Fix tonemapping (not sure what I did wrong)~~
