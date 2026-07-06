@@ -525,8 +525,8 @@ T1 EETF(T2 e1, const float displayWhite, const float displayBlack, \
 	\
 	/* Step 1: Normalize PQ values based on mastering display */ \
 	e1 = (e1 - displayBlackNorm) / contentRange; \
-	/* Let's clamp the input to our configured input peak */ \
-	e1 = min(1.0, e1); \
+	/* Let's clamp the input to 0.0 : 1.0 */ \
+	e1 = saturate(e1); \
 	\
 	/* Step 1.5: Calculate mastering display black and white in [0:1] PQ */ \
 	float minLum = (displayBlackNorm - contentBlackNorm) / contentRange; \
@@ -536,7 +536,8 @@ T1 EETF(T2 e1, const float displayWhite, const float displayBlack, \
 	float KS = 1.5 * maxLum - 0.5; \
 	\
 	/* Step 3: Solve for EETF (e3) with given end points */ \
-	T2 e2 = e1 < KS ? e1 : P(e1, KS, maxLum); \
+	T2 e2 = e1 < KS ? e1 \
+	                : P(e1, KS, maxLum); \
 	T2 e3 = e2 + minLum * pow(1.0 - e2, 4.0); \
 	\
 	/* Step 4: Hermite spline equations (see functions P(...) and T(...) */ \
@@ -555,20 +556,34 @@ float3 inICtCp(float3 ICtCp, float displayWhite, float displayBlack,
 	return float3(I2, min(ICtCp.x / I2, I2 / ICtCp.x) * ICtCp.yz);
 };
 
-float3 inYCbCr(float3 YCbCr, float displayWhite, float displayBlack,
+float3 inYRGB(float3 colour, float displayWhite, float displayBlack,
                              float contentWhite, float contentBlack)
 {
-	const float Y2 = EETF(YCbCr.x, displayWhite, displayBlack,
-	                               contentWhite, contentBlack);
-
-	return float3(Y2, min(YCbCr.x / Y2, Y2 / YCbCr.x) * YCbCr.yz);
+	float y1 = dot(float3(0.2627, 0.6780, 0.0593), colour);
+	float y2 = BT2100::PQ::EOTF(EETF(BT2100::PQ::iEOTF(y1),
+	                                 displayWhite, displayBlack,
+	                                 contentWhite, contentBlack));
+	
+	return (y2 / y1) * colour;
 };
 
 float3 inRGB(float3 colour, float displayWhite, float displayBlack,
                             float contentWhite, float contentBlack)
 {
-	return EETF(colour, displayWhite, displayBlack,
-	                    contentWhite, contentBlack);
+	return BT2100::PQ::EOTF(EETF(BT2100::PQ::iEOTF(colour),
+	                             displayWhite, displayBlack,
+	                             contentWhite, contentBlack));
+};
+
+float3 inMaxRGB(float3 colour, float displayWhite, float displayBlack,
+                               float contentWhite, float contentBlack)
+{
+	float m1 = max(max(colour.r, colour.g), colour.b);
+	float m2 = BT2100::PQ::EOTF(EETF(BT2100::PQ::iEOTF(m1),
+	                                 displayWhite, displayBlack,
+	                                 contentWhite, contentBlack));
+
+	return (m2 / m1) * colour;
 };
 
 } // namespace ReShadeCMS::ToneMapping

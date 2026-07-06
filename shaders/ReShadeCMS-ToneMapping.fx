@@ -4,14 +4,12 @@ namespace ReShadeCMS {
 namespace ToneMapping {
 
 #define MAPPING_SPACE_ICTCP  0
-#define MAPPING_SPACE_YCBCR  1
-#define MAPPING_SPACE_YRGB   2
-#define MAPPING_SPACE_RGB    3
-#define MAPPING_SPACE_MAXRGB 4
+#define MAPPING_SPACE_YRGB   1
+#define MAPPING_SPACE_RGB    2
+#define MAPPING_SPACE_MAXRGB 3
 
 uniform uint mappingSpace <ui_type = "combo";
                            ui_items = "ICtCp\0"
-                                      "Y'Cb'Cr'\0"
                                       "YRGB\0"
                                       "R'G'B'\0"
                                       "maxRGB\0";
@@ -93,15 +91,17 @@ float3 staticToneMap(float4 pos : SV_POSITION,
 		
 		colour = LMS::toRGB(colour);
 		break;
-	case MAPPING_SPACE_YCBCR:
-		break;
 	case MAPPING_SPACE_YRGB:
+		colour = inYRGB(colour, displayWhite, displayBlack,
+		                        contentWhite, contentBlack);
 		break;
 	case MAPPING_SPACE_RGB:
-		colour = EETF(colour, displayWhite, displayBlack,
-		                      contentWhite, contentBlack);
+		colour = inRGB(colour, displayWhite, displayBlack,
+		                       contentWhite, contentBlack);
 		break;
 	case MAPPING_SPACE_MAXRGB:
+		colour = inMaxRGB(colour, displayWhite, displayBlack,
+		                          contentWhite, contentBlack);
 		break;
 	default:
 		break;
