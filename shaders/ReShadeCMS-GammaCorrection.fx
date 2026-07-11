@@ -30,21 +30,19 @@ float3 correctGamma(float4 pos : SV_POSITION,
 {
 	float3 colour = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 
-	#if defined(BUFFER_IS_HDR)
-	// Return to SDR nits as if it had been mapped up
 	#if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
 	colour = BT709::toBT2020(colour);
 	colour /= diffuseWhite / sRGB::whiteLevel;
+	float oldY = BT709::deriveY(colour);
 	#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
 	colour *= BT2100::PQ::peakWhite / BT1886::whiteLevel;
 	colour /= diffuseWhite / BT1886::whiteLevel;
+	float oldY = BT2100::deriveY(colour);
 	#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
 	colour *= BT2100::HLG::peakWhite / BT1886::whiteLevel;
 	colour /= diffuseWhite / BT1886::whiteLevel;
+	float oldY = BT2100::deriveY(colour);
 	#endif
-
-	// TODO: Look into if I from ICtCp would be better over Y from YRGB.
-	float oldY = dot(float3(0.2627, 0.6780, 0.0593), colour);
 
 	float newY = (diffuseWhite / 
 	              #if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
@@ -61,10 +59,6 @@ float3 correctGamma(float4 pos : SV_POSITION,
 	colour = clamp(colour, -125.0, 125.0);
 	#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
 	colour /= BT2100::PQ::peakWhite / BT1886::whiteLevel;
-	#endif
-
-	#else // SDR
-	colour = pow(colour, gamma);
 	#endif
 
 	return colour;

@@ -25,7 +25,7 @@ uniform float displayWhite <ui_type = "slider";
                             ui_step = 1.0;
                             ui_max = 10000.0;
                             ui_label = "Peak White";
-                            ui_category = "Output Settings";
+                            ui_category = "Display Settings";
                             ui_units = " nits";
                             > = RESHADECMS_DEFAULT_DISPLAY_WHITE;
 
@@ -38,7 +38,7 @@ uniform float displayBlack <ui_type = "slider";
                             ui_step = 0.0001;
                             ui_max = 1.0;
                             ui_label = "Black Level";
-                            ui_category = "Output Settings";
+                            ui_category = "Display Settings";
                             ui_units = " nits";
                             > = RESHADECMS_DEFAULT_DISPLAY_BLACK;
 

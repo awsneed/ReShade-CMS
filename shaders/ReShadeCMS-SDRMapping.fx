@@ -15,18 +15,13 @@ uniform float diffuseWhite <ui_type = "slider";
                             ui_units = " nits";
                             > = RESHADECMS_DEFAULT_DIFFUSE_WHITE;
 
-uniform bool gammaEnabled <ui_tooltip = "When scaling SDR from 100 nits to 203 "
-                                        "nits, an adjustment of 1.15 - 1.16 is "
-                                        "recommended to preserve the look of "
-                                        "shadows and midtones.";
-                           ui_label = "Adjust Gamma";
-                           > = true;
+uniform bool gammaEnabled <ui_label = "Adjust Gamma"; > = true;
 
 uniform float gamma <ui_type = "slider";
                      ui_min = 1.000;
                      ui_step = 0.001;
                      ui_max = 1.2;
-                     ui_label = "Gamma Power";
+                     ui_label = "Power";
                      > = 1.155;
 
 float3 directMapPS(float4 pos : SV_POSITION,
@@ -36,7 +31,7 @@ float3 directMapPS(float4 pos : SV_POSITION,
 	
 	colour = BT709::toBT2020(colour);
 	
-	float Y = dot(float3(0.2627, 0.6780, 0.0593), colour);
+	float Y = BT2100::deriveY(colour);
 	float Y203 = (diffuseWhite / scRGB::diffuseWhite)
 	              * (gammaEnabled ? (sign(Y) * pow(abs(Y), gamma)) : abs(Y));
 	float scale = Y != 0.0 ? Y203 / Y : 0.0;

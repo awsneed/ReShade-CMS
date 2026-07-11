@@ -3,19 +3,6 @@
 namespace ReShadeCMS {
 namespace EOTFCorrection {
 
-#if defined(BUFFER_IS_HDR)
-uniform float SDRWhite <ui_type = "slider";
-                        ui_min = 1.0;
-                        ui_step = 1.0;
-                        ui_max = 405.0;
-                        ui_label = "SDR White";
-                        ui_units = " nits";
-                        ui_tooltip = "White level for SDR EOTFs.";
-                        > = 80.0;
-#else
-static const float diffuseWhite = 100.0;
-#endif
-
 uniform uint oldEOTF <ui_type = "combo";
                       ui_items = "None \0"
                                  "sRGB \0"
@@ -26,6 +13,7 @@ uniform uint oldEOTF <ui_type = "combo";
                                  "HLG \0"
                                  #endif
                                  ;
+                      ui_text = "BUFFER_COLOR_SPACE: " BUFFER_COLOR_SPACE_STRING;
                       ui_label = "Original EOTF";
                       > = EOTF_DEFAULT;
 
@@ -41,6 +29,19 @@ uniform uint newEOTF <ui_type = "combo";
                                  ;
                       ui_label = "Override EOTF";
                       > = EOTF_DEFAULT;
+
+#if defined(BUFFER_IS_HDR)
+uniform float SDRWhite <ui_type = "slider";
+                        ui_min = 1.0;
+                        ui_step = 1.0;
+                        ui_max = 405.0;
+                        ui_label = "SDR White";
+                        ui_units = " nits";
+                        ui_tooltip = "White level for SDR EOTFs.";
+                        > = 80.0;
+#else
+static const float diffuseWhite = 100.0;
+#endif
 
 float3 correctEOTF(float4 pos : SV_POSITION,
                    float2 texcoord : TexCoord) : SV_Target

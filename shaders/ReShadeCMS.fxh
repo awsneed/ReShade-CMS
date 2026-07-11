@@ -220,6 +220,12 @@ static const float4x2 specs = float4x2(primaries[0],
                                        primaries[1],
                                        primaries[2],
                                        whitePoint);
+
+float deriveY(float3 colour)
+{
+	static const float3x3 npm = deriveNPM(specs);
+	return dot(npm[1], colour);
+};
 } // namespace ReShadeCMS::BT709
 
 namespace BT1886 {
@@ -360,6 +366,12 @@ static const float4x2 specs = float4x2(primaries[0],
                                        whitePoint);
 static const float diffuseWhite = 203.0;
 
+float deriveY(float3 colour)
+{
+	static const float3x3 npm = deriveNPM(specs);
+	return dot(npm[1], colour);
+};
+
 namespace PQ {
 static const float peakWhite = 10000.0;
 static const float m1 = 2610.0 / 16384.0;
@@ -416,18 +428,14 @@ float EOTF(float x)
 } // namespace ReShadeCMS::BT2100
 
 namespace RGB {
-	static const float3x3 lmsCoeffs = float3x3(
-	        // LR LG LB
-	        // MR MG MB
-	        // SR SG SB
-	         1688.0,  2146.0,   262.0,
-	          683.0,  2951.0,   462.0,
-	           99.0,   309.0,  3688.0) / 4096.0;
+static const float3x3 lmsCoeffs = float3x3(1688.0,  2146.0,   262.0,
+	                                    683.0,  2951.0,   462.0,
+	                                     99.0,   309.0,  3688.0) / 4096.0;
 
-	float3 toLMS(float3 colour)
-	{
-		return mul(lmsCoeffs, colour);
-	};
+float3 toLMS(float3 colour)
+{
+	return mul(lmsCoeffs, colour);
+};
 } // namespace ReShadeCMS::RGB
 
 namespace LMS {
@@ -547,6 +555,9 @@ T1 EETF(T2 e1, const float displayWhite, const float displayBlack, \
 };
 _AUTO_FUNC(_BT2408_EETF, float, float);
 
+// Preserves hue well and is a perceputal colour difference space
+// Includes a desaturation function. Multiplies CtCp by the smaller of the
+// ratio of change to I and its reciprocal.
 float3 inICtCp(float3 ICtCp, float displayWhite, float displayBlack,
                              float contentWhite, float contentBlack)
 {
@@ -556,10 +567,12 @@ float3 inICtCp(float3 ICtCp, float displayWhite, float displayBlack,
 	return float3(I2, min(ICtCp.x / I2, I2 / ICtCp.x) * ICtCp.yz);
 };
 
+// Preserves chroma. Does not involve any desaturation
 float3 inYRGB(float3 colour, float displayWhite, float displayBlack,
                              float contentWhite, float contentBlack)
 {
-	float y1 = dot(float3(0.2627, 0.6780, 0.0593), colour);
+	static const float3x3 npm = deriveNPM(BT2100::specs);
+	float y1 = BT2100::deriveY(colour);
 	float y2 = BT2100::PQ::EOTF(EETF(BT2100::PQ::iEOTF(y1),
 	                                 displayWhite, displayBlack,
 	                                 contentWhite, contentBlack));
@@ -567,6 +580,7 @@ float3 inYRGB(float3 colour, float displayWhite, float displayBlack,
 	return (y2 / y1) * colour;
 };
 
+// Highly desaturates and can cause noticeable changes in hues
 float3 inRGB(float3 colour, float displayWhite, float displayBlack,
                             float contentWhite, float contentBlack)
 {
@@ -575,6 +589,7 @@ float3 inRGB(float3 colour, float displayWhite, float displayBlack,
 	                             contentWhite, contentBlack));
 };
 
+// Preserves chroma but at the expense of lightness. Can look very un-natural
 float3 inMaxRGB(float3 colour, float displayWhite, float displayBlack,
                                float contentWhite, float contentBlack)
 {
