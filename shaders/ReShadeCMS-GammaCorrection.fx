@@ -17,9 +17,9 @@ static const float diffuseWhite = 100.0;
 #endif
 
 uniform float gamma <ui_type = "slider";
-                     ui_min = 1.000;
+                     ui_min = 0.155;
                      ui_step = 0.001;
-                     ui_max = 1.2;
+                     ui_max = 2.155;
                      ui_label = "Adjustment Power";
                      > = 1.155;
 
@@ -30,35 +30,28 @@ float3 correctGamma(float4 pos : SV_POSITION,
 {
 	float3 colour = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 
+	float normScale = diffuseWhite;
 	#if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
+	normScale /= sRGB::whiteLevel;
 	colour = BT709::toBT2020(colour);
-	colour /= diffuseWhite / sRGB::whiteLevel;
-	float oldY = BT709::deriveY(colour);
 	#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
-	colour *= BT2100::PQ::peakWhite / BT1886::whiteLevel;
-	colour /= diffuseWhite / BT1886::whiteLevel;
-	float oldY = BT2100::deriveY(colour);
+	normScale /= BT2100::PQ::peakWhite;
 	#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_HLG
-	colour *= BT2100::HLG::peakWhite / BT1886::whiteLevel;
-	colour /= diffuseWhite / BT1886::whiteLevel;
-	float oldY = BT2100::deriveY(colour);
+	normScale /= BT2100::HLG::peakWhite;
 	#endif
 
-	float newY = (diffuseWhite / 
-	              #if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
-	              scRGB::diffuseWhite
-	              #else
-	              BT1886::whiteLevel
-	              #endif
-	              ) * (sign(oldY) * pow(abs(oldY), gamma));
-	float scale = oldY != 0.0 ? newY / oldY : 0.0;
+	colour *= normScale;
+
+	float Y = BT2100::deriveY(colour);
+	float newY = sign(Y) * pow(abs(Y), gamma);
+	float scale = Y != 0.0 ? newY / Y : 0.0;
 	colour *= scale;
+
+	colour /= normScale;
 
 	#if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
 	colour = BT2020::toBT709(colour);
 	colour = clamp(colour, -125.0, 125.0);
-	#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
-	colour /= BT2100::PQ::peakWhite / BT1886::whiteLevel;
 	#endif
 
 	return colour;
