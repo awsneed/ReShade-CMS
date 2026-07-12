@@ -27,6 +27,24 @@ for my studies.
 
 ## To-do List
 
+- [ ] PQ / HLG buffers are very broken. All the work so far has been on scRGB
+  and that should be the buffer type used if you are able to choose (check out
+  SpecialK).
+- [ ] Look into tonemapping output being slightly over the configured peak.
+    - Maybe it's fine? Is it only scRGB due to the BT.2020 -> BT.709 at the end?
+- [ ] Tonemapping display black setting seems to do weird things... Highlight
+  compression is fine, but bumping up display black compresses the whole image.
+- [ ] PLUGE shader for setting black level for non-reference environments, to be
+  fed into the Static Tone Mapping shader for example to compensate for the
+  ambient lighting.
+  - Need to first fix the above point about the display black setting on the
+    tone mapping shader. Or maybe I'm misunderstanding something...
+- [ ] Make a dumb, static BT.2020 -> DCI-P3 perceptual gamut map shader maybe?
+    - This might just be a LUT. Probably not very useful, but could be
+      interesting to do and learn about.
+- [ ] Improve performance (probably a passive effort)
+    - Probably saving this for later, and my priority is no visual issues so
+      I'll take the performance impact if it means preventing oddities.
 - [x] ~~Fix tonemapping (not sure what I did wrong)~~
 - [x] ~~Add proper ICtCp color conversion in tonemapping (it will be the
   default)~~
@@ -36,8 +54,6 @@ for my studies.
     - ~~The SDR Direct-Mapping shader has that gamma adjust code in one block, so
       yeah probably easy to conver that into something without the other
       conversions.~~
-- [ ] Look into tonemapping output being slightly over the configured peak.
-    - Maybe it's fine? Is it only scRGB due to the BT.2020 -> BT.709 at the end?
 - [x] ~~SDR correction tools (sRGB <-> BT.1886 / Gamma 2.2)~~
     - ~~Since breaking out more functions, I think this should be easy to
       implement. The EOTF Correction shader may already do this? Need to
@@ -52,16 +68,3 @@ for my studies.
       main ReShadeCMS.fxh. Maybe multiple .fxh files?~~
     - Removed the macro-based typedefs. Will probably continue to refactor code
       in the future to make it easier to understand and work with.
-- [ ] Tonemapping display black setting seems to do weird things... Highlight
-  compression is fine, but bumping up display black compresses the whole image.
-- [ ] PLUGE shader for setting black level for non-reference environments, to be
-  fed into the Static Tone Mapping shader for example to compensate for the
-  ambient lighting.
-  - Need to first fix the above point about the display black setting on the
-    tone mapping shader. Or maybe I'm misunderstanding something...
-- [ ] Improve performance (probably a passive effort)
-    - Probably saving this for later, and my priority is no visual issues so
-      I'll take the performance impact if it means preventing oddities.
-- [ ] Make a dumb, static BT.2020 -> DCI-P3 perceptual gamut map shader maybe?
-    - This might just be a LUT. Probably not very useful, but could be
-      interesting to do and learn about.
