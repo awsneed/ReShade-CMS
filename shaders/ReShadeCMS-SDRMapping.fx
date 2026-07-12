@@ -7,7 +7,7 @@ namespace SDRMapping {
 	#define RESHADECMS_DEFAULT_DIFFUSE_WHITE 203.0
 #endif
 
-uniform float diffuseWhite <ui_type = "slider";
+uniform float diffuse <ui_type = "slider";
                             ui_min = 1.0;
                             ui_step = 1.0;
                             ui_max = 405.0;
@@ -27,24 +27,23 @@ uniform float gamma <ui_type = "slider";
 float3 directMapPS(float4 pos : SV_POSITION,
                    float2 texcoord : TexCoord) : SV_Target
 {
-	float3 colour = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
+	float3 rgb = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 	
-	colour = BT709::toBT2020(colour);
+	rgb = BT709::toBT2020(rgb);
 	
-	float Y = BT2100::deriveY(colour);
-	float Y203 = (diffuseWhite / scRGB::diffuseWhite)
-	              * (gammaEnabled ? (sign(Y) * pow(abs(Y), gamma)) : abs(Y));
-	float scale = Y != 0.0 ? Y203 / Y : 0.0;
-	colour *= scale;
+	float y = BT2100::deriveY(rgb);
+	float newY = (diffuse / scRGB::diffuse) * (gammaEnabled ? sPow(y, gamma)
+	                                                        : y);
+	float scale = y != 0.0 ? newY / y : y;
+	rgb *= scale;
 
 	#if BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB
-	colour = BT2020::toBT709(colour);
-	colour = clamp(colour, -125.0, 125.0);
+	rgb = BT2020::toBT709(rgb);
 	#elif BUFFER_COLOR_SPACE == COLOUR_SPACE_PQ
-	colour /= BT2100::PQ::peakWhite / BT1886::whiteLevel;
+	rgb /= BT2100::PQ::peak / BT1886::diffuse;
 	#endif
 
-	return colour;
+	return rgb;
 }
 
 #if BUFFER_COLOR_SPACE != COLOUR_SPACE_SRGB
