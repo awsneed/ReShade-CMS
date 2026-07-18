@@ -542,9 +542,7 @@ T1 EETF(T1 e1, const float dstPeak, const float dstBlack, \
 	float srcRangeNl = srcPeakNl - srcBlackNl; \
 	\
 	/* Step 1: Normalize PQ values based on mastering display */ \
-	e1 = (e1 - dstBlackNl) / srcRangeNl; \
-	/* Let's clamp the input to 0.0 : 1.0 */ \
-	e1 = saturate(e1); \
+	e1 = (e1 - srcBlackNl) / srcRangeNl; \
 	\
 	/* Step 1.5: Calculate mastering display black and white in [0:1] PQ */ \
 	float minLum = (dstBlackNl - srcBlackNl) / srcRangeNl; \
@@ -741,7 +739,71 @@ T1 normalizeFrom(const T1 e, const uint srcSpace) \
 };
 _AUTO_FUNC(_BUFFER_NORMALIZE_FROM, float);
 
+#define _BUFFER_TO_NITS(T1) \
+T1 toNits(const T1 e) \
+{ \
+	switch (BUFFER_COLOR_SPACE) { \
+	case COLOUR_SPACE_SCRGB: \
+		return e * sRGB::diffuse; \
+	case COLOUR_SPACE_PQ: \
+		return e * BT2100::PQ::peak; \
+	case COLOUR_SPACE_HLG: \
+		return e * BT2100::HLG::peak; \
+	default: \
+		return e; \
+	} \
+};
+_AUTO_FUNC(_BUFFER_TO_NITS, float);
+
+#define _BUFFER_FROM_NITS(T1) \
+T1 fromNits(const T1 e) \
+{ \
+	switch (BUFFER_COLOR_SPACE) { \
+	case COLOUR_SPACE_SCRGB: \
+		return e / sRGB::diffuse; \
+	case COLOUR_SPACE_PQ: \
+		return e / BT2100::PQ::peak; \
+	case COLOUR_SPACE_HLG: \
+		return e / BT2100::HLG::peak; \
+	default: \
+		return e; \
+	} \
+};
+_AUTO_FUNC(_BUFFER_FROM_NITS, float);
+
+float deriveY(const float3 rgb)
+{
+	switch (BUFFER_COLOR_SPACE) {
+	case COLOUR_SPACE_SRGB:
+	case COLOUR_SPACE_SCRGB:
+		return BT709::deriveY(rgb);
+	case COLOUR_SPACE_PQ:
+	case COLOUR_SPACE_HLG:
+		return BT2100::deriveY(rgb);
+	default:
+		return rgb;
+	}
+};
+
 } // namespace ReShadeCMS::Buffer
+
+namespace PLUGE {
+// TODO: Well, this is partly some BT2100-specific info. So probably need to
+// rethink which namespace they go in.
+static const int narrowBlack =  256.0;
+static const int narrowPeak  = 3760.0;
+static const int narrowRange = narrowPeak - narrowBlack;
+
+#if defined(BUFFER_IS_HDR)
+static const float higherLevel          = (1596.0 - narrowBlack) / narrowRange;
+static const float slightlyDarkerLevel  = ( 192.0 - narrowBlack) / narrowRange;
+static const float slightlyLighterLevel = ( 320.0 - narrowBlack) / narrowRange;
+#else
+static const float higherLevel          = (3760.0 - narrowBlack) / narrowRange;
+static const float slightlyDarkerLevel  = ( 192.0 - narrowBlack) / narrowRange;
+static const float slightlyLighterLevel = ( 320.0 - narrowBlack) / narrowRange;
+#endif
+} // namespace ReShadeCMS::PLUGE
 
 } // namespace ReShadeCMS
 

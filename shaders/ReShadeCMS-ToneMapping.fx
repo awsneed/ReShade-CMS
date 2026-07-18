@@ -65,40 +65,44 @@ float3 staticToneMap(float4 pos : SV_POSITION,
 {
 	float3 rgb = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 
-	rgb = Buffer::linearize(rgb);
-	
 	if (BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB)
 		rgb = BT709::toBT2020(rgb);
-
-	rgb = Buffer::normalizeTo(rgb, COLOUR_SPACE_PQ);
+	if (BUFFER_COLOR_SPACE != COLOUR_SPACE_PQ)
+		rgb = Buffer::normalizeTo(rgb, COLOUR_SPACE_PQ);
 	
 	switch (mappingSpace) {
 	case MAPPING_SPACE_ICTCP:
+		rgb = Buffer::linearize(rgb);
 		float3 iCtCp = LMS::PQ::toICtCp(RGB::toLMS(rgb));
 		iCtCp = inICtCp(iCtCp, dstPeak, dstBlack, srcPeak, srcBlack);
 		rgb = LMS::toRGB(ICtCp::PQ::toLMS(iCtCp));
+		rgb = Buffer::unlinearize(rgb);
 		break;
 	case MAPPING_SPACE_YRGB:
+		rgb = Buffer::linearize(rgb);
 		rgb = inYRGB(rgb, dstPeak, dstBlack, srcPeak, srcBlack);
 		break;
 	case MAPPING_SPACE_RGB:
-		rgb = BT2100::PQ::EOTF(inNlRGB(BT2100::PQ::iEOTF(rgb),
-		                               dstPeak, dstBlack,
-		                               srcPeak, srcBlack));
+		if (BUFFER_COLOR_SPACE != COLOUR_SPACE_PQ)
+			rgb = BT2100::PQ::iEOTF(Buffer::linearize(rgb));
+
+		rgb = inNlRGB(rgb, dstPeak, dstBlack, srcPeak, srcBlack);
+
+		if (BUFFER_COLOR_SPACE != COLOUR_SPACE_PQ)
+			rgb = Buffer::unlinearize(BT2100::PQ::EOTF(rgb));
 		break;
 	case MAPPING_SPACE_MAXRGB:
+		rgb = Buffer::linearize(rgb);
 		rgb = inMaxRGB(rgb, dstPeak, dstBlack, srcPeak, srcBlack);
 		break;
 	default:
 		break;
 	}
 
-	rgb = Buffer::normalizeFrom(rgb, COLOUR_SPACE_PQ);
-
+	if (BUFFER_COLOR_SPACE != COLOUR_SPACE_PQ)
+		rgb = Buffer::normalizeFrom(rgb, COLOUR_SPACE_PQ);
 	if (BUFFER_COLOR_SPACE == COLOUR_SPACE_SCRGB)
 		rgb = BT2020::toBT709(rgb);
-
-	rgb = Buffer::unlinearize(rgb);
 
 	return rgb;
 }

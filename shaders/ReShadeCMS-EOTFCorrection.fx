@@ -52,6 +52,10 @@ float3 correctEOTF(float4 pos : SV_POSITION,
 {
 	float3 rgb = tex2Dfetch(ReShade::BackBuffer, pos.xy).rgb;
 
+	// First, depending on the source EOTF, we may need to first apply the
+	// natural EOTF of content to get to linear display light
+	// (display-referred mapping)
+	
 	rgb = Buffer::linearize(rgb);
 
 	switch (srcEOTF) {
