@@ -25,6 +25,12 @@ repo](https://github.com/crosire/reshade-shaders), as this project obviously
 depends on the former and the latter has served as a good reference and example
 for my studies.
 
+All those who work on [Special K](https://github.com/SpecialKO/SpecialK), for
+like Lillium's shaders it has been a great boon for playing around with HDR in
+games. I use it in practically every single game I play, the only exception
+being certain multiplayer games and the very rare game that is not compatible
+with it. It has been one of my favorite pieces of software for many years.
+
 ## To-do List
 
 - [ ] Look into desaturation function for the YRGB mapping space on the
