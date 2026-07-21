@@ -50,6 +50,14 @@ with it. It has been one of my favorite pieces of software for many years.
   ambient lighting.
   - ~~Need to first fix the above point about the display black setting on the
     tone mapping shader. Or maybe I'm misunderstanding something...~~
+  - Got a really basic version that just shows the right-hand blocks of slightly
+    ligher and slightly darker than black plus the center "higher" level square.
+    This is somewhat usable already for adding some black lift in non-reference
+    environments. Ideally the darker-than-black square could work in conjunction
+    with the tonemapping / PQ black lift shaders to allow setting the black lift
+    high enough to see the slightly lighter square but not the slightly darker
+    square. Currently however, it appears to be clamped somewhere (not sure
+    where).
 - [ ] Finish the PQ black level lift shader?
     - Now that the tonemapping shader black settings are fixed, it might be
       doing a better job. Need to think about if the PQ black level lift shader
