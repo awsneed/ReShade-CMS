@@ -12,7 +12,7 @@ worked with shaders or HLSL, so once again: Here be dragons.
 
 ## Special Thanks
 
-[Lillium](https://github.com/EndlesslyFlowering) for their [ReShade HDR
+[Lilium](https://github.com/EndlesslyFlowering) for their [ReShade HDR
 Shaders](https://github.com/EndlesslyFlowering/ReShade_HDR_shaders) project,
 which has been an inspiration for this project and a recurring source of insight
 on my never-ending journey of learning about HDR and all things video / colour
@@ -26,7 +26,7 @@ depends on the former and the latter has served as a good reference and example
 for my studies.
 
 All those who work on [Special K](https://github.com/SpecialKO/SpecialK), for
-like Lillium's shaders it has been a great boon for playing around with HDR in
+like Lilium's shaders it has been a great boon for playing around with HDR in
 games. I use it in practically every single game I play, the only exception
 being certain multiplayer games and the very rare game that is not compatible
 with it. It has been one of my favorite pieces of software for many years.
