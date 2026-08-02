@@ -32,7 +32,7 @@ float3 adjustGamma(float4 pos : SV_POSITION,
 	rgb = Buffer::linearize(rgb);
 
 	const float y = Buffer::deriveY(rgb) / diffuseNorm;
-	rgb *= sPow(y, gamma) / y;
+	rgb *= y != 0.0 ? sPow(y, gamma) / y : 0.0;
 
 	rgb = Buffer::unlinearize(rgb);
 
