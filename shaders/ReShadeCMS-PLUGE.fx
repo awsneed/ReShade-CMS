@@ -133,12 +133,11 @@ float3 displayPLUGE(float4 pos : SV_POSITION,
 
 technique displayPLUGE <ui_label = "PLUGE"; >
 {
-	pass black
+	pass p0
 	{
 		VertexShader = PostProcessVS;
 		PixelShader = displayPLUGE;
 	}
-
 }
 
 } // namespace ReShadeCMS::PLUGE
