@@ -78,10 +78,12 @@ float3 staticToneMap(float4 pos : SV_POSITION,
 		rgb = LMS::toRGB(ICtCp::PQ::toLMS(iCtCp));
 		rgb = Buffer::unlinearize(rgb);
 		break;
+
 	case MAPPING_SPACE_YRGB:
 		rgb = Buffer::linearize(rgb);
 		rgb = inYRGB(rgb, dstPeak, dstBlack, srcPeak, srcBlack);
 		break;
+
 	case MAPPING_SPACE_RGB:
 		if (BUFFER_COLOR_SPACE != COLOUR_SPACE_PQ)
 			rgb = BT2100::PQ::iEOTF(Buffer::linearize(rgb));
@@ -91,10 +93,12 @@ float3 staticToneMap(float4 pos : SV_POSITION,
 		if (BUFFER_COLOR_SPACE != COLOUR_SPACE_PQ)
 			rgb = Buffer::unlinearize(BT2100::PQ::EOTF(rgb));
 		break;
+
 	case MAPPING_SPACE_MAXRGB:
 		rgb = Buffer::linearize(rgb);
 		rgb = inMaxRGB(rgb, dstPeak, dstBlack, srcPeak, srcBlack);
 		break;
+
 	default:
 		break;
 	}

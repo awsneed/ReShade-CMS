@@ -542,7 +542,7 @@ T1 EETF(T1 e1, const float dstPeak, const float dstBlack, \
 	float srcRangeNl = srcPeakNl - srcBlackNl; \
 	\
 	/* Step 1: Normalize PQ values based on mastering display */ \
-	e1 = (e1 - srcBlackNl) / srcRangeNl; \
+	e1 = (clamp(e1, srcBlackNl, srcPeakNl) - srcBlackNl) / srcRangeNl; \
 	\
 	/* Step 1.5: Calculate mastering display black and white in [0:1] PQ */ \
 	float minLum = (dstBlackNl - srcBlackNl) / srcRangeNl; \
